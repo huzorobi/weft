@@ -2,6 +2,22 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.2.0] — 2026-09-13
+
+Phase 1 — free offline core.
+
+### Added
+- Orchestrator: breadth-first seed expansion with dedup on the entity key, a depth cap
+  (max node depth), per-module token-bucket rate limiting, per-call timeouts, once-per-run
+  module health checks (a down source is skipped for the whole run and the skip audited),
+  and error isolation so a failing module never crashes the run.
+- Module registry with self-registration via a decorator and package discovery.
+- Confidence scoring: source-reliability weight plus corroboration across independent sources.
+- In-memory and Neo4j graph stores behind one interface.
+- Modules: phonenumbers_local, dns_enum, crtsh, certspotter, rdap_whois, companies_house,
+  theharvester.
+- Async HTTP client with redirect-following and a retry for flaky JSON endpoints.
+
 ## [0.1.0] — 2026-09-13
 
 Phase 0 — skeleton.

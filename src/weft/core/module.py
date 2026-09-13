@@ -61,7 +61,14 @@ class AuditSink(Protocol):
 
 
 class HttpClient(Protocol):
-    async def get(self, url: str, **kwargs: object) -> object: ...
+    async def get_json(
+        self, url: str, *, params: dict | None = None,
+        headers: dict | None = None, auth: tuple[str, str] | None = None,
+    ) -> tuple[int, object]: ...
+
+    async def get_text(
+        self, url: str, *, params: dict | None = None, headers: dict | None = None,
+    ) -> tuple[int, str]: ...
 
 
 @dataclass
@@ -92,6 +99,7 @@ class Module(ABC):
     access: Access
     requires_free_key: bool = False   # free to obtain, never paid
     tos_risk: bool = False
+    reliability: float = 0.5          # source-reliability weight (0-1) for confidence scoring
 
     # Tool concerns, so an external-binary module cannot no-op silently.
     version: str | None = None
