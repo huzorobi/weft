@@ -2,6 +2,24 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.25.0] — 2026-09-13
+
+Crypto-address recon — a new entity type and pack.
+
+### Added
+- New `EntityType.CRYPTO_ADDRESS` (seedable from the UI). Ethereum addresses fold to
+  lower-case for dedup; Bitcoin addresses keep case (base58/bech32 are case-sensitive).
+- `blockchain_btc` (CRYPTO_ADDRESS): Bitcoin address balance, total received/sent, and
+  transaction count from mempool.space, falling back to blockchain.info. Keyless, passive
+  (reads a public explorer index; never touches a wallet or node). Ignores non-BTC addresses.
+- `ens_resolve` (CRYPTO_ADDRESS / USERNAME / DOMAIN): Ethereum Name Service both ways — an
+  ETH address to its primary ENS name (an identity pivot), and a `.eth` name to its address.
+  Keyless, passive.
+- A dependency-free chain classifier so each module fires only on its own chain.
+
+CryptoScamDB was evaluated for scam-address reports but its API is down (HTTP 502); deferred
+rather than shipped unverified.
+
 ## [0.24.0] — 2026-09-13
 
 Four keyless, verified OSINT sources.
