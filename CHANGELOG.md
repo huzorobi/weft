@@ -2,6 +2,17 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.40.0] — 2026-09-13
+
+Standalone interactive graph export.
+
+### Added
+- `reporting.graph_export`: exports the entity graph as a standalone interactive HTML page
+  (`write_graph_html` / `export_interactive_graph`) built on the tested pyvis payload. It adds
+  a title and a colour legend, and highlights risk nodes — sanctioned entities, malicious
+  infrastructure, known-exploited CVEs — with a red border so the graph draws attention to what
+  matters. The risk-emphasis step is pure and tested; rendering uses pyvis (the `ui` extra).
+
 ## [0.39.0] — 2026-09-13
 
 HTML + PDF report output.
