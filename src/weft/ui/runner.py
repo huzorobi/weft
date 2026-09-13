@@ -59,6 +59,7 @@ def execute_run(
     override_reason: str | None = None,
     hunt: bool = False,
     reasoner=None,
+    allow_dark_web: bool = False,
 ) -> UiRunOutput:
     """Run one expansion. Refuses when the legal statement was not accepted."""
     graph = InMemoryGraph()          # always the render source
@@ -101,7 +102,8 @@ def execute_run(
             else:
                 driver = Orchestrator(depth_cap=depth_cap, **common)
             return await driver.run([seed], engagement=engagement, acceptance=acceptance,
-                                    operator=operator, allow_tos_risk=allow_tos_risk, override=override)
+                                    operator=operator, allow_tos_risk=allow_tos_risk,
+                                    allow_dark_web=allow_dark_web, override=override)
         finally:
             if http is not None:
                 await http.aclose()

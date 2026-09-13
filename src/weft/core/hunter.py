@@ -95,6 +95,7 @@ class Hunter:
         acceptance: LegalAcceptance | None,
         operator: str,
         allow_tos_risk: bool = False,
+        allow_dark_web: bool = False,
         override: ScopeOverride | None = None,
     ) -> HunterResult:
         result = HunterResult(engagement_id=engagement.id if engagement else None)
@@ -102,7 +103,7 @@ class Hunter:
         entities: dict[str, Entity] = {}
 
         self._audit.record(action="hunter_start", engagement_id=result.engagement_id, operator=operator,
-                           detail={"allow_tos_risk": allow_tos_risk, "max_depth": self._max_depth,
+                           detail={"allow_tos_risk": allow_tos_risk, "allow_dark_web": allow_dark_web, "max_depth": self._max_depth,
                                    "max_steps": self._max_steps})
 
         # gate each seed; only allowed seeds enter the graph
@@ -120,12 +121,12 @@ class Hunter:
             result.entities = entities
             return result
 
-        live = await self._live_modules(engagement, operator, allow_tos_risk)
+        live = await self._live_modules(engagement, operator, allow_tos_risk, allow_dark_web)
         done: set[tuple[str, str]] = set()
         stalls = 0
 
         for step_no in range(1, self._max_steps + 1):
-            candidates = self._candidates(entities, depth, live, allow_tos_risk, done)
+            candidates = self._candidates(entities, depth, live, allow_tos_risk, done, allow_dark_web)
             if not candidates:
                 result.stopped_reason = "no further pivots"
                 break
@@ -142,7 +143,7 @@ class Hunter:
             for cand in chosen[: self._per_step]:
                 done.add((cand.module.name, cand.entity.key()))
                 children = await self._call(cand.module, cand.entity, engagement, operator,
-                                            allow_tos_risk, cand.depth, result)
+                                            allow_tos_risk, cand.depth, result, allow_dark_web)
                 ran.append((cand.module.name, cand.entity.key()))
                 for child in children:
                     self._graph.upsert_entity(child)
@@ -170,10 +171,10 @@ class Hunter:
 
     # ------------------------------------------------------------------ helpers
 
-    async def _live_modules(self, engagement, operator, allow_tos_risk) -> list[Module]:
+    async def _live_modules(self, engagement, operator, allow_tos_risk, allow_dark_web=False) -> list[Module]:
         live = []
         for module in self._modules:
-            health = await module.health(self._ctx(engagement, operator, allow_tos_risk, 0))
+            health = await module.health(self._ctx(engagement, operator, allow_tos_risk, 0, allow_dark_web))
             if health.ok:
                 live.append(module)
             else:
@@ -181,14 +182,14 @@ class Hunter:
                                    operator=operator, source_module=module.name, detail={"reason": health.detail})
         return live
 
-    def _candidates(self, entities, depth, live, allow_tos_risk, done) -> list[_Candidate]:
+    def _candidates(self, entities, depth, live, allow_tos_risk, done, allow_dark_web=False) -> list[_Candidate]:
         out: list[_Candidate] = []
         for key, entity in entities.items():
             d = depth.get(key, 0)
             if d >= self._max_depth:
                 continue
             for module in live:
-                if not module.can_run(entity, allow_tos_risk=allow_tos_risk):
+                if not module.can_run(entity, allow_tos_risk=allow_tos_risk, allow_dark_web=allow_dark_web):
                     continue
                 if (module.name, key) in done:
                     continue
@@ -225,8 +226,8 @@ class Hunter:
         chosen = [menu[i] for i in idxs]
         return chosen, stop, why or "model-selected pivots"
 
-    async def _call(self, module, entity, engagement, operator, allow_tos_risk, depth, result) -> list[Entity]:
-        ctx = self._ctx(engagement, operator, allow_tos_risk, depth)
+    async def _call(self, module, entity, engagement, operator, allow_tos_risk, depth, result, allow_dark_web=False) -> list[Entity]:
+        ctx = self._ctx(engagement, operator, allow_tos_risk, depth, allow_dark_web)
         self._audit.record(action="module_run", engagement_id=result.engagement_id, operator=operator,
                            source_module=module.name, entity_key=entity.key(), detail={"depth": depth, "hunter": True})
         await self._rate.acquire(module.name)
@@ -243,10 +244,10 @@ class Hunter:
                                source_module=module.name, entity_key=entity.key(), detail={"error": repr(exc)})
             return []
 
-    def _ctx(self, engagement, operator, allow_tos_risk, depth) -> RunContext:
+    def _ctx(self, engagement, operator, allow_tos_risk, depth, allow_dark_web=False) -> RunContext:
         return RunContext(
             engagement_id=engagement.id if engagement else "", operator=operator,
-            allow_tos_risk=allow_tos_risk, depth=depth, rate_limiter=self._rate,
+            allow_tos_risk=allow_tos_risk, allow_dark_web=allow_dark_web, depth=depth, rate_limiter=self._rate,
             secrets=self._secrets, audit=self._audit, http=self._http)
 
 

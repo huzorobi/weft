@@ -84,6 +84,7 @@ class RunContext:
     operator: str
     allow_tos_risk: bool
     depth: int
+    allow_dark_web: bool = False
     rate_limiter: RateLimiter | None = None
     secrets: SecretsAccessor | None = None
     audit: AuditSink | None = None
@@ -99,6 +100,7 @@ class Module(ABC):
     access: Access
     requires_free_key: bool = False   # free to obtain, never paid
     tos_risk: bool = False
+    dark_web: bool = False            # queries the dark web (Tor); gated by its own opt-in
     reliability: float = 0.5          # source-reliability weight (0-1) for confidence scoring
 
     # Tool concerns, so an external-binary module cannot no-op silently.
@@ -129,8 +131,12 @@ class Module(ABC):
         confidence set. Must be idempotent. Never raise on 'no results' — return []."""
         ...
 
-    def can_run(self, entity: Entity, *, allow_tos_risk: bool) -> bool:
-        """Bus predicate: type accepted and ToS opt-in satisfied."""
+    def can_run(self, entity: Entity, *, allow_tos_risk: bool, allow_dark_web: bool = False) -> bool:
+        """Bus predicate: type accepted, and the ToS and dark-web opt-ins satisfied."""
         if entity.type not in self.accepts:
             return False
-        return (not self.tos_risk) or allow_tos_risk
+        if self.tos_risk and not allow_tos_risk:
+            return False
+        if self.dark_web and not allow_dark_web:
+            return False
+        return True

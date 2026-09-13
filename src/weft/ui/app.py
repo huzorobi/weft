@@ -99,6 +99,10 @@ def main() -> None:
         hunt = st.checkbox("🤖 Autonomous hunter (AI-guided pivoting)", value=False,
                            help="The local model chooses the highest-value pivots from a validated menu of real "
                                 "actions, following leads instead of a flat sweep. It never invents an action.")
+        dark_web = st.checkbox("🌐 Dark-web search (Tor, Ahmia) — opt-in, logged", value=False,
+                               help="Passive dark-web SEARCH via the Ahmia index over Tor: finds .onion sites that "
+                                    "mention the seed. Search-only — it does not crawl .onion content. Needs a "
+                                    "running Tor SOCKS proxy; self-disables otherwise.")
 
         st.markdown("**Responsibility statement**")
         st.caption(LEGAL_STATEMENT)
@@ -113,7 +117,7 @@ def main() -> None:
             engagement=selected, seed_type=seed_type, seed_value=seed_value, operator="operator",
             depth_cap=depth, allow_tos_risk=allow_tos, accepted=accepted,
             audit_store=audit_store, override_reason=override_reason or None,
-            hunt=hunt, reasoner=hunt_reasoner,
+            hunt=hunt, reasoner=hunt_reasoner, allow_dark_web=dark_web,
         )
         st.session_state["graph"] = out.graph
         st.session_state["message"] = out.message

@@ -21,6 +21,7 @@ dependencies = [
     "neo4j>=5.20",
     "fastapi>=0.111",
     "uvicorn[standard]>=0.30",
+    "socksio>=1.0",   # SOCKS proxy support for httpx (dark-web over Tor)
 ]
 
 [project.optional-dependencies]

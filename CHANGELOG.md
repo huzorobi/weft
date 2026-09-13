@@ -2,6 +2,20 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.19.0] — 2026-09-13
+
+Email breach exposure, and opt-in dark-web search over Tor.
+
+### Added
+- `xposedornot`: email breach-exposure check via XposedOrNot (free, keyless) — which known
+  breaches an address appears in. Fills the gap left when HIBP's email lookup went paid.
+- `darkweb_ahmia`: dark-web SEARCH via the Ahmia index over Tor — finds .onion sites that
+  mention the seed. Search-only (it does not crawl .onion content). Double-gated: a
+  `dark_web` module behind a new `allow_dark_web` opt-in toggle, and it self-disables unless
+  a Tor SOCKS proxy is reachable. Handles Ahmia's per-session token/cookie flow.
+- A separate `allow_dark_web` gate threaded through the orchestrator, hunter, runner, and UI,
+  logged at run start. `dark_web` flag on the module contract.
+
 ## [0.18.0] — 2026-09-13
 
 Keyless identity sources: GLEIF and Wikidata.

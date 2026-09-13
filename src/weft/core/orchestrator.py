@@ -74,6 +74,7 @@ class Orchestrator:
         acceptance: LegalAcceptance | None,
         operator: str,
         allow_tos_risk: bool = False,
+        allow_dark_web: bool = False,
         override: ScopeOverride | None = None,
     ) -> RunResult:
         result = RunResult(engagement_id=engagement.id if engagement else None)
@@ -84,7 +85,7 @@ class Orchestrator:
         # operator's per-run choice is on the record (a compliance requirement).
         self._audit.record(
             action="run_start", engagement_id=result.engagement_id, operator=operator,
-            detail={"allow_tos_risk": allow_tos_risk, "depth_cap": self._depth_cap,
+            detail={"allow_tos_risk": allow_tos_risk, "allow_dark_web": allow_dark_web, "depth_cap": self._depth_cap,
                     "seeds": [s.key() for s in seeds]},
         )
 
@@ -110,7 +111,7 @@ class Orchestrator:
         # 2. Health-check modules once; drop the dead ones for the whole run.
         live: list[Module] = []
         for module in self._modules:
-            ctx = self._ctx(engagement, operator, allow_tos_risk, 0)
+            ctx = self._ctx(engagement, operator, allow_tos_risk, 0, allow_dark_web)
             health = await module.health(ctx)
             if health.ok:
                 live.append(module)
@@ -129,9 +130,9 @@ class Orchestrator:
             if depth >= self._depth_cap:
                 continue  # boundary node — already in the graph, not expanded further
             for module in live:
-                if not module.can_run(entity, allow_tos_risk=allow_tos_risk):
+                if not module.can_run(entity, allow_tos_risk=allow_tos_risk, allow_dark_web=allow_dark_web):
                     continue
-                new_entities = await self._call(module, entity, engagement, operator, allow_tos_risk, depth, result)
+                new_entities = await self._call(module, entity, engagement, operator, allow_tos_risk, depth, result, allow_dark_web)
                 for child in new_entities:
                     self._graph.upsert_entity(child)
                     self._graph.link(entity, child, via=module.name, confidence=child.confidence)
@@ -141,8 +142,8 @@ class Orchestrator:
                         queue.append((child, depth + 1))
         return result
 
-    async def _call(self, module, entity, engagement, operator, allow_tos_risk, depth, result) -> list[Entity]:
-        ctx = self._ctx(engagement, operator, allow_tos_risk, depth)
+    async def _call(self, module, entity, engagement, operator, allow_tos_risk, depth, result, allow_dark_web=False) -> list[Entity]:
+        ctx = self._ctx(engagement, operator, allow_tos_risk, depth, allow_dark_web)
         self._audit.record(
             action="module_run", engagement_id=result.engagement_id, operator=operator,
             source_module=module.name, entity_key=entity.key(), detail={"depth": depth},
@@ -167,11 +168,12 @@ class Orchestrator:
                                 entity_key=entity.key(), detail={"error": repr(exc)})
             return []
 
-    def _ctx(self, engagement, operator, allow_tos_risk, depth) -> RunContext:
+    def _ctx(self, engagement, operator, allow_tos_risk, depth, allow_dark_web=False) -> RunContext:
         return RunContext(
             engagement_id=engagement.id if engagement else "",
             operator=operator,
             allow_tos_risk=allow_tos_risk,
+            allow_dark_web=allow_dark_web,
             depth=depth,
             rate_limiter=self._rate,
             secrets=self._secrets,
