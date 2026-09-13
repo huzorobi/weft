@@ -2,6 +2,15 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.22.0] — 2026-09-13
+
+Timeline.
+
+### Added
+- `reporting.build_timeline`: a chronology built from the temporal signals already in the
+  graph — WHOIS registration and expiry dates, Wayback and Common Crawl capture timestamps —
+  shown as a dated "Timeline" section in the report.
+
 ## [0.21.0] — 2026-09-13
 
 Email spoofability and Common Crawl.

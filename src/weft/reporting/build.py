@@ -50,11 +50,13 @@ def build_report(engagement, graph: InMemoryGraph, *, reasoner: Reasoner | None 
         by_type.setdefault(e.type.value, []).append(e)
 
     from weft.core.analytics import graph_analytics
+    from weft.reporting.timeline import build_timeline
     from weft.core.correlation import CorrelationEngine
     from weft.core.resolution import resolve_identities
     findings = CorrelationEngine().run(graph)
     resolution = resolve_identities(graph)
     analytics = graph_analytics(graph)
+    timeline = build_timeline(graph)
 
     lines: list[str] = []
     a = lines.append
@@ -144,6 +146,13 @@ def build_report(engagement, graph: InMemoryGraph, *, reasoner: Reasoner | None 
         a("")
     a(f"- {len(analytics.communities)} community/communities (connected clusters) in the graph.")
     a("")
+    # ---- timeline ----
+    if timeline:
+        a("## Timeline")
+        a("")
+        for t in timeline:
+            a(f"- **{t.date}** — {t.event}")
+        a("")
 
     # ---- AI identity assessment (grounded, optional) ----
     assessment = _assess_identity(reasoner, engagement, by_type, seeds, findings, resolution.clusters)
