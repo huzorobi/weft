@@ -1,33 +1,40 @@
 """Weft graph UI (Streamlit).
 
-A thin shell over the tested services: engagement selection/creation, the legal
-acceptance gate, seed input and run config, the live graph (pyvis), an entity detail
-panel, a confidence filter, and the audit-log viewer. All data logic lives in
-``weft.ui.runner``, ``weft.ui.graphview``, and ``weft.storage.meta``.
+A thin shell over the tested services. Flow: accept the terms once at first launch, then just
+enter a seed and run — the engagement (auto id, client, stamped date, seed as scope) is created
+for you. Below: the live graph (pyvis), an entity detail panel, a confidence filter, the report,
+and the audit log. All data logic lives in ``weft.ui.runner``, ``weft.ui.graphview``, and
+``weft.storage.meta``.
 
 Run:  streamlit run src/weft/ui/app.py
 """
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 
 import streamlit as st
 import streamlit.components.v1 as components
 
-from weft.compliance.engagement import LEGAL_STATEMENT, ControllerRole, Engagement
+from weft.compliance.engagement import ControllerRole, Engagement
 from weft.config import load_settings
 from weft.core.entity import EntityType
 from weft.core.reasoner import OllamaReasoner
 from weft.reporting import build_kml, build_report, has_geolocated_ips
 from weft.storage.meta import EngagementRepository, MetaStore, SqlAuditStore
+from weft.ui import consent
 from weft.ui.graphview import build_vis_payload, render_html
 from weft.ui.runner import execute_run
 
 SEED_TYPES = [
-    EntityType.DOMAIN, EntityType.PHONE, EntityType.EMAIL,
-    EntityType.USERNAME, EntityType.NAME, EntityType.PERSON,
-    EntityType.CRYPTO_ADDRESS, EntityType.CVE,
+    EntityType.DOMAIN, EntityType.EMAIL, EntityType.USERNAME, EntityType.NAME,
+    EntityType.PERSON, EntityType.PHONE, EntityType.CRYPTO_ADDRESS, EntityType.CVE,
 ]
+SEED_HINT = {
+    EntityType.DOMAIN: "example.com", EntityType.EMAIL: "jane@example.com",
+    EntityType.USERNAME: "janedoe", EntityType.NAME: "Jane Doe", EntityType.PERSON: "Jane Doe",
+    EntityType.PHONE: "+44 20 7946 0000", EntityType.CRYPTO_ADDRESS: "0x… or 1A1z…",
+    EntityType.CVE: "CVE-2021-44228",
+}
 
 
 @st.cache_resource
@@ -37,134 +44,130 @@ def _stores():
     return meta, EngagementRepository(meta), SqlAuditStore(meta)
 
 
-def main() -> None:
-    st.set_page_config(page_title="Weft — OSINT recon", layout="wide")
-    meta, repo, audit_store = _stores()
-
-    st.title("Weft")
-    st.caption("Free-source OSINT reconnaissance. Authorised engagements only.")
-
-    # --- sidebar: live service status ---
+def _sidebar_system() -> None:
+    from weft.ui.health import all_live, service_status
     with st.sidebar:
-        from weft.ui.health import all_live, service_status
         status = service_status()
-        header = "🟢 All services live" if all_live(status) else "🟠 Some services down"
-        st.markdown(f"**{header}**")
+        st.markdown(f"**{'🟢 All services live' if all_live(status) else '🟠 Some services down'}**")
         cols = st.columns(len(status))
         for col, (svc, ok) in zip(cols, status.items()):
             col.markdown(f"{'🟢' if ok else '🔴'} {svc}")
-        st.caption("Green = reachable. Refresh the page to re-check.")
         if not all_live(status) and st.button("🔄 Restart services", use_container_width=True):
             from weft.ui.services import restart_services
-            with st.spinner("Starting services (this can take ~30s while Neo4j boots)…"):
+            with st.spinner("Starting services (~30s while Neo4j boots)…"):
                 ok, msg = restart_services()
             (st.success if ok else st.error)(msg)
             st.rerun()
         st.divider()
-
-    # --- sidebar: shutdown control ---
-    with st.sidebar:
         with st.expander("⏻  Shut down Weft"):
             st.caption("Stops the stack (Neo4j, SearXNG, Tor) and this UI. Ollama is left running.")
             if st.button("Shut down now", type="primary", use_container_width=True):
                 from weft.ui.shutdown import request_shutdown
                 request_shutdown()
-                st.success("✅ Weft is shutting down — stopping the stack and the UI.")
-                st.info("This tab will show a **connection error** in a moment. That is expected: "
-                        "it means the UI has stopped. Just close the tab.")
+                st.success("✅ Weft is shutting down.")
+                st.info("This tab will show a **connection error** shortly — that is expected (the UI "
+                        "stopped). Close the tab.")
                 st.stop()
-        st.divider()
 
-    # --- sidebar: engagement selection + creation ---
-    with st.sidebar:
-        st.header("Engagement")
-        engagements = repo.list()
-        options = {f"{e.id} — {e.client}": e for e in engagements}
-        selected = None
-        if options:
-            label = st.selectbox("Active engagement", list(options))
-            selected = options[label]
-        else:
-            st.info("No engagements yet. Create one below.")
 
-        with st.expander("New engagement"):
-            with st.form("new_engagement"):
-                eid = st.text_input("ID", placeholder="ENG-2026-001")
-                client = st.text_input("Client")
-                scope_ref = st.text_input("Signed scope reference")
-                lawful_basis = st.text_input("Lawful basis", value="legitimate interest")
-                targets = st.text_area("Authorised targets (one per line)")
-                dpia = st.text_input("DPIA reference")
-                lia = st.text_input("LIA reference")
-                role = st.selectbox("Role", [r.value for r in ControllerRole])
-                start = st.date_input("Start", value=date.today())
-                end = st.date_input("End")
-                verified = st.text_area("Verified-control domains (one per line)",
-                                        help="Domains the client has proven they control (required for breach lookups).")
-                if st.form_submit_button("Save engagement") and eid and client:
-                    repo.save(Engagement(
-                        id=eid, client=client, scope_ref=scope_ref, lawful_basis=lawful_basis,
-                        authorised_targets=[t.strip() for t in targets.splitlines() if t.strip()],
-                        start_date=start, end_date=end, dpia_ref=dpia or None, lia_ref=lia or None,
-                        controller_role=ControllerRole(role),
-                        verified_domains={d.strip(): "operator-asserted" for d in verified.splitlines() if d.strip()},
-                    ))
-                    st.success(f"Saved {eid}. Reselect it above.")
-                    st.rerun()
+def _terms_gate(audit_store) -> None:
+    """First-launch terms & conditions. Blocks the app until accepted (once)."""
+    st.title("Weft")
+    st.subheader("Terms & conditions")
+    st.markdown(consent.TERMS_TEXT)
+    st.divider()
+    operator = st.text_input("Your name (recorded with the acceptance)", value="operator")
+    agree = st.checkbox("I have read and accept these terms, and take responsibility as the operator.")
+    if st.button("Accept and continue", type="primary", disabled=not agree):
+        rec = consent.record_acceptance(operator)
+        try:
+            audit_store.record(action="terms_accept", engagement_id="-", operator=rec["operator"],
+                               detail={"version": rec["version"], "accepted_at": rec["accepted_at"]})
+        except Exception:
+            pass
+        st.rerun()
 
-    if selected is None:
-        st.stop()
 
-    # --- run configuration ---
-    left, right = st.columns([2, 3])
-    with left:
-        st.subheader("Run")
-        st.write(f"**Scope:** {', '.join(selected.authorised_targets) or '(none)'}")
-        seed_type = st.selectbox("Seed type", SEED_TYPES, format_func=lambda t: t.value)
-        seed_value = st.text_input("Seed value")
-        depth = st.slider("Depth", 1, 3, 2)
-        allow_tos = st.checkbox("Enable enumeration sources — maigret/sherlock/holehe/phoneinfoga (ToS-flagged, logged)",
-                                value=True,
-                                help="On by default for maximum collection via public enumeration. Every use is "
-                                     "logged. Uncheck to stay strictly on official/free-API sources.")
-        override_reason = st.text_input("Out-of-scope override reason (optional, logged)")
-        hunt = st.checkbox("🤖 Autonomous hunter (AI-guided pivoting)", value=False,
-                           help="The local model chooses the highest-value pivots from a validated menu of real "
-                                "actions, following leads instead of a flat sweep. It never invents an action.")
-        dark_web = st.checkbox("🌐 Dark-web search (Tor, Ahmia) — opt-in, logged", value=False,
-                               help="Passive dark-web SEARCH via the Ahmia index over Tor: finds .onion sites that "
-                                    "mention the seed. Search-only — it does not crawl .onion content. Needs a "
-                                    "running Tor SOCKS proxy; self-disables otherwise.")
+def _auto_engagement(client: str, seed_type: EntityType, seed_value: str) -> Engagement:
+    """Create a minimal engagement: auto id, client, stamped date; the seed is its scope."""
+    today = date.today()
+    return Engagement(
+        id=f"WEFT-{datetime.now():%Y%m%d-%H%M%S}",
+        client=(client.strip() or "Ad-hoc"),
+        scope_ref="operator accepted terms at launch",
+        lawful_basis="operator-asserted (terms accepted)",
+        authorised_targets=[seed_value.strip()],
+        start_date=today, end_date=today,
+        controller_role=ControllerRole.CONTROLLER,
+        verified_domains=({seed_value.strip(): "operator-asserted"} if seed_type is EntityType.DOMAIN else {}),
+    )
 
-        st.markdown("**Responsibility statement**")
-        st.caption(LEGAL_STATEMENT)
-        accepted = st.checkbox("I accept, as the operator, and take responsibility for this run.")
 
-        run = st.button("Run expansion", type="primary", disabled=not seed_value)
+def main() -> None:
+    st.set_page_config(page_title="Weft — OSINT recon", layout="wide")
+    meta, repo, audit_store = _stores()
+    _sidebar_system()
+
+    # First launch: accept the terms once.
+    if not consent.is_accepted():
+        _terms_gate(audit_store)
+        return
+
+    rec = consent.accepted_record() or {}
+    st.title("Weft")
+    st.caption(f"Free-source OSINT recon · passive, public sources only · terms accepted by "
+               f"{rec.get('operator', 'operator')} on {str(rec.get('accepted_at', ''))[:10]}.")
+
+    # --- the search form is always visible ---
+    st.subheader("New search")
+    c1, c2, c3 = st.columns([1, 1, 2])
+    client = c1.text_input("Client / case", value="Ad-hoc", help="A label for this investigation.")
+    seed_type = c2.selectbox("Seed type", SEED_TYPES, format_func=lambda t: t.value)
+    seed_value = c3.text_input("Seed value", placeholder=SEED_HINT.get(seed_type, ""),
+                               help="What to investigate: a domain, email, username, name, phone, "
+                                    "crypto address, or CVE.")
+
+    o1, o2, o3, o4 = st.columns(4)
+    depth = o1.slider("Depth", 1, 3, 2, help="How many hops to expand from the seed.")
+    allow_tos = o2.checkbox("Enumeration sources", value=True,
+                            help="maigret/sherlock/holehe/phoneinfoga — public enumeration, logged.")
+    hunt = o3.checkbox("🤖 AI hunter", value=False,
+                       help="The local model picks high-value pivots from a validated action menu.")
+    dark_web = o4.checkbox("🌐 Dark-web", value=False,
+                           help="Passive Ahmia index search over Tor (opt-in, logged). Search-only.")
+    run = st.button("Run search", type="primary", disabled=not seed_value.strip(), use_container_width=True)
 
     if run:
-        hunt_reasoner = OllamaReasoner(load_settings().reasoner_model,
-                                       base_url=load_settings().ollama_url) if hunt else None
-        out = execute_run(
-            engagement=selected, seed_type=seed_type, seed_value=seed_value, operator="operator",
-            depth_cap=depth, allow_tos_risk=allow_tos, accepted=accepted,
-            audit_store=audit_store, override_reason=override_reason or None,
-            hunt=hunt, reasoner=hunt_reasoner, allow_dark_web=dark_web,
-        )
+        eng = _auto_engagement(client, seed_type, seed_value)
+        repo.save(eng)
+        settings = load_settings()
+        reasoner = OllamaReasoner(settings.reasoner_model, base_url=settings.ollama_url) if hunt else None
+        with st.spinner("Collecting from open sources…"):
+            out = execute_run(
+                engagement=eng, seed_type=seed_type, seed_value=seed_value.strip(),
+                operator=rec.get("operator", "operator"), depth_cap=depth, allow_tos_risk=allow_tos,
+                accepted=True, audit_store=audit_store, hunt=hunt, reasoner=reasoner,
+                allow_dark_web=dark_web,
+            )
         st.session_state["graph"] = out.graph
         st.session_state["message"] = out.message
+        st.session_state["engagement"] = eng
+        st.session_state["seed_value"] = seed_value.strip()
 
-    with right:
-        st.subheader("Graph")
-        if "message" in st.session_state:
-            st.info(st.session_state["message"])
-        graph = st.session_state.get("graph")
-        if graph and graph.nodes:
+    # --- results ---
+    if "message" in st.session_state:
+        st.success(st.session_state["message"])
+    graph = st.session_state.get("graph")
+    if graph and graph.nodes:
+        st.divider()
+        left, right = st.columns([3, 2])
+        with left:
+            st.subheader("Graph")
             min_conf = st.slider("Minimum confidence", 0.0, 1.0, 0.0, 0.05)
             payload = build_vis_payload(graph, min_confidence=min_conf)
             st.caption(f"{len(payload['nodes'])} nodes / {len(payload['edges'])} edges")
-            components.html(render_html(payload), height=620)
-
+            components.html(render_html(payload), height=560)
+        with right:
             st.subheader("Entity detail")
             keys = sorted(n["id"] for n in payload["nodes"])
             if keys:
@@ -173,42 +176,37 @@ def main() -> None:
                 st.json({"type": node.type.value, "value": node.value,
                          "confidence": node.confidence, "metadata": node.metadata})
 
-    # --- report (deterministic + optional local-AI narrative) ---
-    st.divider()
-    st.subheader("Report")
-    graph = st.session_state.get("graph")
-    if graph and graph.nodes:
+        # --- report ---
+        st.divider()
+        st.subheader("Report")
         settings = load_settings()
+        eng = st.session_state.get("engagement")
         col_a, col_b = st.columns([3, 1])
-        model = col_a.text_input("Local model for the narrative (Ollama, optional)",
-                                 value=settings.reasoner_model,
-                                 help="Leave as-is for a small local model, or clear to skip AI narration.")
-        if col_b.button("Generate report"):
+        model = col_a.text_input("Local model for the AI narrative (Ollama; clear to skip)",
+                                 value=settings.reasoner_model)
+        if col_b.button("Generate report", use_container_width=True):
             reasoner = OllamaReasoner(model, base_url=settings.ollama_url) if model.strip() else None
-            md = build_report(selected, graph, reasoner=reasoner,
-                              seeds=[seed_value] if seed_value else None)
-            st.session_state["report_md"] = md
+            st.session_state["report_md"] = build_report(
+                eng, graph, reasoner=reasoner, seeds=[st.session_state.get("seed_value")])
         if "report_md" in st.session_state:
-            st.download_button("Download report.md", st.session_state["report_md"],
-                               file_name=f"{selected.id}-report.md", mime="text/markdown")
+            st.download_button("⬇ report.md", st.session_state["report_md"],
+                               file_name=f"{eng.id}-report.md", mime="text/markdown")
             if has_geolocated_ips(graph):
-                st.download_button("Download KML map (geolocated IPs)", build_kml(graph),
-                                   file_name=f"{selected.id}-map.kml",
+                st.download_button("⬇ map.kml (geolocated IPs)", build_kml(graph),
+                                   file_name=f"{eng.id}-map.kml",
                                    mime="application/vnd.google-earth.kml+xml")
             st.markdown(st.session_state["report_md"])
-    else:
-        st.caption("Run an expansion first, then generate a report.")
 
-    # --- audit viewer ---
+    # --- audit log ---
     st.divider()
-    st.subheader("Audit log")
-    events = list(audit_store.all())[-200:]
-    st.dataframe(
-        [{"time": e.ts, "action": e.action, "engagement": e.engagement_id,
-          "operator": e.operator, "module": e.source_module, "entity": e.entity_key,
-          "detail": e.detail} for e in reversed(events)],
-        use_container_width=True, hide_index=True,
-    )
+    with st.expander("Audit log"):
+        events = list(audit_store.all())[-200:]
+        st.dataframe(
+            [{"time": e.ts, "action": e.action, "engagement": e.engagement_id,
+              "operator": e.operator, "module": e.source_module, "entity": e.entity_key,
+              "detail": e.detail} for e in reversed(events)],
+            use_container_width=True, hide_index=True,
+        )
 
 
 if __name__ == "__main__":

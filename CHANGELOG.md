@@ -2,6 +2,21 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.50.0] — 2026-09-13
+
+Simpler UI: one-time terms, near-automatic engagement, always-visible search.
+
+### Changed
+- The operator accepts the terms & conditions **once at first launch** (covering UK GDPR/DPA,
+  EU GDPR, and US law incl. the CFAA), recorded with name, version and timestamp and persisted
+  (`weft.ui.consent`) — not re-asked every run.
+- The engagement is now **near-automatic**: enter a client label and a seed and run; Weft
+  creates the engagement (auto id, client, stamped date, the seed as its scope) behind the scenes.
+  The heavy engagement form (scope ref, lawful basis, DPIA/LIA, dates, roles) is gone from the UI.
+- The **search form is always visible** on the main page (seed type + value + depth + enumeration/
+  AI-hunter/dark-web toggles + Run), so the app is no longer blank before an engagement exists.
+  Results, report, and audit log follow below.
+
 ## [0.49.0] — 2026-09-13
 
 Restart-services button.
