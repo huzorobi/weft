@@ -24,6 +24,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
 from weft.compliance.audit import AuditEvent, AuditStore
+from weft.compliance.engagement import ControllerRole, Engagement
 
 
 class Base(DeclarativeBase):
@@ -114,3 +115,54 @@ class SqlAuditStore(AuditStore):
                 )
                 for r in rows
             ]
+
+
+class EngagementRepository:
+    """Persist and load :class:`Engagement` domain objects via :class:`MetaStore`."""
+
+    def __init__(self, store: MetaStore):
+        self._store = store
+
+    def save(self, e: Engagement) -> None:
+        with self._store.session() as s:
+            row = s.get(EngagementRow, e.id) or EngagementRow(id=e.id)
+            row.client = e.client
+            row.scope_ref = e.scope_ref
+            row.lawful_basis = e.lawful_basis
+            row.authorised_targets = list(e.authorised_targets)
+            row.start_date = e.start_date
+            row.end_date = e.end_date
+            row.dpia_ref = e.dpia_ref
+            row.lia_ref = e.lia_ref
+            row.controller_role = e.controller_role.value
+            row.verified_domains = dict(e.verified_domains)
+            row.status = e.status
+            s.add(row)
+            s.commit()
+
+    def get(self, engagement_id: str) -> Engagement | None:
+        with self._store.session() as s:
+            row = s.get(EngagementRow, engagement_id)
+            return self._to_domain(row) if row else None
+
+    def list(self) -> list[Engagement]:
+        with self._store.session() as s:
+            rows = s.scalars(select(EngagementRow).order_by(EngagementRow.id)).all()
+            return [self._to_domain(r) for r in rows]
+
+    @staticmethod
+    def _to_domain(row: EngagementRow) -> Engagement:
+        return Engagement(
+            id=row.id,
+            client=row.client,
+            scope_ref=row.scope_ref,
+            lawful_basis=row.lawful_basis,
+            authorised_targets=list(row.authorised_targets or []),
+            start_date=row.start_date,
+            end_date=row.end_date,
+            dpia_ref=row.dpia_ref,
+            lia_ref=row.lia_ref,
+            controller_role=ControllerRole(row.controller_role),
+            verified_domains=dict(row.verified_domains or {}),
+            status=row.status,
+        )

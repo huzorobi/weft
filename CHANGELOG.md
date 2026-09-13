@@ -2,6 +2,21 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.3.0] — 2026-09-13
+
+Phase 2 — graph view.
+
+### Added
+- Streamlit UI: engagement selector and creation form, the legal-acceptance gate,
+  seed input and run config (depth, ToS-flagged opt-in, out-of-scope override reason),
+  the interactive graph, an entity-detail panel, a confidence filter, and the
+  audit-log viewer.
+- `EngagementRepository` to persist and load engagements.
+- `ui.graphview`: pure vis-payload builder (colour per entity type, confidence filter
+  that drops low-confidence nodes and their edges) plus a pyvis HTML renderer.
+- `ui.runner.execute_run`: synchronous run service wrapping the async orchestrator,
+  recording legal acceptance and persisting the audit trail.
+
 ## [0.2.0] — 2026-09-13
 
 Phase 1 — free offline core.
