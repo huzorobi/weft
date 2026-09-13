@@ -20,10 +20,29 @@ Owner: HuzoSecurity Ltd. Purpose: authorised penetration-testing reconnaissance.
 - **ToS honesty.** Scraping / unofficial-endpoint sources are flagged and off by
   default; the operator opts in per run and the choice is logged.
 
+## Local AI (optional)
+
+A small local model turns the raw graph into intelligence, without ever leaving the
+machine. It reasons *about* the deterministic evidence; it never produces findings.
+
+- **Report narrative.** A concise, factual summary of the graph in British English.
+- **Identity assessment.** Compares the collected entities against the seed and judges
+  whether they belong to one individual, listing corroborating signals and conflicts and
+  ending with a confidence band. A labelled inference for a human to confirm, never an
+  auto-merge and never a deterministic finding.
+- **Grounded.** Any narrative that names an email or URL not present in the graph is
+  discarded, so the model can summarise but cannot invent.
+- **Local-only and optional.** Runs against a local Ollama (a 3B–8B model is plenty, and
+  fits an 8GB GPU). Personal data never reaches a hosted model, and Weft works fully
+  without it. Configure with `OLLAMA_URL` and `REASONER_MODEL`.
+
 ## Status
 
-Phase 0 (skeleton) complete: entity model, module contract, engagement model, the
-fail-closed scope gate, and the append-only audit logger, with tests.
+Phases 0–5 complete: the compliance-gated engagement model and fail-closed scope gate,
+17 free-source modules across phone, email, username, name, and domain, the breadth-first
+orchestrator, a Streamlit graph UI, self-hosted search and Wayback history, the local-AI
+report narrator and identity assessment, and the purge/retention lifecycle. Tested
+throughout.
 
 ## Develop
 
