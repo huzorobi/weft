@@ -32,7 +32,8 @@ def main(argv: list[str] | None = None) -> int:
     rep = sub.add_parser("report", help="build the Markdown report for an engagement from the persisted graph")
     rep.add_argument("engagement_id")
     rep.add_argument("--model", default="", help="local Ollama model for the AI narrative (empty to skip)")
-    rep.add_argument("--out", default="", help="write to this file instead of stdout")
+    rep.add_argument("--out", default="", help="write the Markdown report to this file instead of stdout")
+    rep.add_argument("--kml", default="", help="also write a KML map of the geolocated IPs to this file")
 
     pur = sub.add_parser("purge", help="delete an engagement's personal data and findings (keeps redacted audit)")
     pur.add_argument("engagement_id")
@@ -81,12 +82,19 @@ def main(argv: list[str] | None = None) -> int:
             from weft.core.reasoner import OllamaReasoner
             reasoner = OllamaReasoner(args.model, base_url=settings.ollama_url)
         md = build_report(eng, graph, reasoner=reasoner)
+        from pathlib import Path
         if args.out:
-            from pathlib import Path
             Path(args.out).write_text(md, encoding="utf-8")
             print(f"wrote {args.out} ({len(graph.nodes)} entities)")
         else:
             print(md)
+        if args.kml:
+            from weft.reporting import build_kml, has_geolocated_ips
+            if has_geolocated_ips(graph):
+                Path(args.kml).write_text(build_kml(graph), encoding="utf-8")
+                print(f"wrote {args.kml} (geolocated IP map)")
+            else:
+                print("no geolocated IPs in the graph; KML not written (run ip_geolocation first).")
         return 0
     if args.command == "purge":
         if not args.yes:

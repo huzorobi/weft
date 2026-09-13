@@ -18,7 +18,7 @@ from weft.compliance.engagement import LEGAL_STATEMENT, ControllerRole, Engageme
 from weft.config import load_settings
 from weft.core.entity import EntityType
 from weft.core.reasoner import OllamaReasoner
-from weft.reporting import build_report
+from weft.reporting import build_kml, build_report, has_geolocated_ips
 from weft.storage.meta import EngagementRepository, MetaStore, SqlAuditStore
 from weft.ui.graphview import build_vis_payload, render_html
 from weft.ui.runner import execute_run
@@ -149,6 +149,10 @@ def main() -> None:
         if "report_md" in st.session_state:
             st.download_button("Download report.md", st.session_state["report_md"],
                                file_name=f"{selected.id}-report.md", mime="text/markdown")
+            if has_geolocated_ips(graph):
+                st.download_button("Download KML map (geolocated IPs)", build_kml(graph),
+                                   file_name=f"{selected.id}-map.kml",
+                                   mime="application/vnd.google-earth.kml+xml")
             st.markdown(st.session_state["report_md"])
     else:
         st.caption("Run an expansion first, then generate a report.")

@@ -2,6 +2,17 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.11.0] — 2026-09-13
+
+IP geolocation and KML map export (inspired by Obipixel's traceVIEW).
+
+### Added
+- `ip_geolocation`: enriches every IP entity with country, city, coordinates, ISP, and
+  ASN via the free keyless ip-api.com, and surfaces the owning organisation. The
+  passive-only alternative to traceVIEW's active traceroute.
+- `reporting.build_kml`: exports a Google Earth KML of the geolocated IPs. Available from
+  the CLI (`weft report <id> --kml map.kml`) and as a download in the UI report section.
+
 ## [0.10.0] — 2026-09-13
 
 Neo4j persistence, engagement-isolated.
