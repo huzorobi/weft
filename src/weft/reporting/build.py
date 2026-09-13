@@ -50,7 +50,9 @@ def build_report(engagement, graph: InMemoryGraph, *, reasoner: Reasoner | None 
         by_type.setdefault(e.type.value, []).append(e)
 
     from weft.core.correlation import CorrelationEngine
+    from weft.core.resolution import resolve_identities
     findings = CorrelationEngine().run(graph)
+    resolution = resolve_identities(graph)
 
     lines: list[str] = []
     a = lines.append
@@ -108,8 +110,26 @@ def build_report(engagement, graph: InMemoryGraph, *, reasoner: Reasoner | None 
           "the evidence below is authoritative._")
     a("")
 
+    # ---- identity clusters (entity resolution) ----
+    a("## Identity clusters")
+    a("")
+    if resolution.clusters:
+        a("Entities that appear to be the same identity, on shared handles and matching names. "
+          "These are correlations, not confirmed merges.")
+        a("")
+        for c in resolution.clusters:
+            a(f"- **{c.label}** ({c.size} entities, confidence {c.confidence:.2f}): {c.basis}")
+    else:
+        a("_No multi-entity identity clusters found._")
+    if resolution.possibly_same:
+        a("")
+        a("Possible matches (weaker leads, verify):")
+        for aa, bb, score, why in resolution.possibly_same[:10]:
+            a(f"- {why} _(similarity {score})_")
+    a("")
+
     # ---- AI identity assessment (grounded, optional) ----
-    assessment = _assess_identity(reasoner, engagement, by_type, seeds, findings)
+    assessment = _assess_identity(reasoner, engagement, by_type, seeds, findings, resolution.clusters)
     a("## Identity assessment")
     a("")
     if assessment:
@@ -182,7 +202,7 @@ def _narrate(reasoner: Reasoner, engagement, by_type: dict, seeds, findings=None
     return narrative
 
 
-def _assess_identity(reasoner: Reasoner, engagement, by_type: dict, seeds, findings=None) -> str:
+def _assess_identity(reasoner: Reasoner, engagement, by_type: dict, seeds, findings=None, clusters=None) -> str:
     """Ask the model whether the collected entities cohere as one identity matching the seed.
 
     Output is a labelled inference (corroboration, conflicts, a confidence band), never an
@@ -200,6 +220,8 @@ def _assess_identity(reasoner: Reasoner, engagement, by_type: dict, seeds, findi
                          + (f"; sources: {srcs}" if srcs else "") + ")")
     for f in (findings or [])[:10]:
         facts.append(f"- correlation [{f.strength}]: {f.title} — {f.detail}")
+    for c in (clusters or [])[:8]:
+        facts.append(f"- identity cluster (conf {c.confidence:.2f}): {c.basis}")
     prompt = ("Assess whether these collected entities belong to the same individual as the seed. "
               "List corroborating signals and conflicts, then the confidence line.\n\n" + "\n".join(facts))
     out = reasoner.narrate(system=_ASSESS_SYSTEM, prompt=prompt)

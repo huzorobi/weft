@@ -2,6 +2,18 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.15.0] — 2026-09-13
+
+Entity resolution — identity clustering.
+
+### Added
+- `core.resolution.resolve_identities`: clusters person-identifying entities that are the
+  same identity — the same handle across platforms, a handle containing a name's tokens, an
+  email local-part matching a handle — and records weaker fuzzy-name matches as "possibly the
+  same". Never hard-merges: it produces clusters and leads with scores, so a coincidental
+  match stays visible. The report gains an "Identity clusters" section, fed to the identity
+  assessment.
+
 ## [0.14.0] — 2026-09-13
 
 Native username checker + name-to-handle generation (inspired by Obipixel's socialFIND).
