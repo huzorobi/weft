@@ -2,6 +2,21 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.12.0] — 2026-09-13
+
+The autonomous hunter — LLM-guided pivoting.
+
+### Added
+- `core.hunter.Hunter`: an investigator loop that reasons about the graph so far and
+  chooses the highest-value pivots to run next, following leads instead of a flat sweep.
+  The local model picks only from a numbered menu of REAL, valid actions (a registered
+  module applied to an entity in the graph); a choice outside the menu is discarded in
+  code, and the model never produces a finding. Bounded by the engagement scope, a depth
+  cap, a step budget, and diminishing-returns stopping. Without a model it falls back to a
+  deterministic priority, so it always works. Every decision and action is audited.
+- UI: an "Autonomous hunter" toggle on the run form; the runner drives either the flat
+  sweep or the hunter.
+
 ## [0.11.0] — 2026-09-13
 
 IP geolocation and KML map export (inspired by Obipixel's traceVIEW).

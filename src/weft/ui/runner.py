@@ -57,6 +57,8 @@ def execute_run(
     audit_store: AuditStore | None = None,
     modules: list[Module] | None = None,
     override_reason: str | None = None,
+    hunt: bool = False,
+    reasoner=None,
 ) -> UiRunOutput:
     """Run one expansion. Refuses when the legal statement was not accepted."""
     graph = InMemoryGraph()          # always the render source
@@ -89,15 +91,17 @@ def execute_run(
         # Persist to Neo4j when reachable; always render from the in-memory graph.
         persist = open_neo4j(settings, engagement.id)
         write_graph = TeeGraph(graph, persist) if persist else graph
-        orch = Orchestrator(
-            modules=mods, graph=write_graph, audit=audit,
-            rate_limiter=TokenBucketRateLimiter(rate=5, capacity=5),
-            secrets=default_secrets(settings.secrets_file), http=http,
-            gate=ScopeGate(), depth_cap=depth_cap,
-        )
+        common = dict(modules=mods, graph=write_graph, audit=audit,
+                      rate_limiter=TokenBucketRateLimiter(rate=5, capacity=5),
+                      secrets=default_secrets(settings.secrets_file), http=http, gate=ScopeGate())
         try:
-            return await orch.run([seed], engagement=engagement, acceptance=acceptance,
-                                  operator=operator, allow_tos_risk=allow_tos_risk, override=override)
+            if hunt:
+                from weft.core.hunter import Hunter
+                driver = Hunter(reasoner=reasoner, max_depth=max(depth_cap, 4), **common)
+            else:
+                driver = Orchestrator(depth_cap=depth_cap, **common)
+            return await driver.run([seed], engagement=engagement, acceptance=acceptance,
+                                    operator=operator, allow_tos_risk=allow_tos_risk, override=override)
         finally:
             if http is not None:
                 await http.aclose()
@@ -105,8 +109,11 @@ def execute_run(
                 persist.close()
 
     result = asyncio.run(_go())
-    if result.seeds_refused and not result.seeds_allowed:
+    if result.seeds_refused and not getattr(result, "seeds_allowed", None) and result.entity_count == 0:
         msg = "Seed refused by the scope gate (out of scope, or engagement inactive)."
+    elif hunt:
+        msg = (f"Hunter: {result.entity_count} entities across {len(result.steps)} step(s), "
+               f"{result.actions_run} action(s). Stopped: {result.stopped_reason}.")
     else:
         msg = (f"{result.entity_count} entities, {result.module_calls} calls, "
                f"{len(result.modules_skipped)} module(s) skipped.")

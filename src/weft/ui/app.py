@@ -96,6 +96,9 @@ def main() -> None:
                                 help="On by default for maximum collection via public enumeration. Every use is "
                                      "logged. Uncheck to stay strictly on official/free-API sources.")
         override_reason = st.text_input("Out-of-scope override reason (optional, logged)")
+        hunt = st.checkbox("🤖 Autonomous hunter (AI-guided pivoting)", value=False,
+                           help="The local model chooses the highest-value pivots from a validated menu of real "
+                                "actions, following leads instead of a flat sweep. It never invents an action.")
 
         st.markdown("**Responsibility statement**")
         st.caption(LEGAL_STATEMENT)
@@ -104,10 +107,13 @@ def main() -> None:
         run = st.button("Run expansion", type="primary", disabled=not seed_value)
 
     if run:
+        hunt_reasoner = OllamaReasoner(load_settings().reasoner_model,
+                                       base_url=load_settings().ollama_url) if hunt else None
         out = execute_run(
             engagement=selected, seed_type=seed_type, seed_value=seed_value, operator="operator",
             depth_cap=depth, allow_tos_risk=allow_tos, accepted=accepted,
             audit_store=audit_store, override_reason=override_reason or None,
+            hunt=hunt, reasoner=hunt_reasoner,
         )
         st.session_state["graph"] = out.graph
         st.session_state["message"] = out.message
