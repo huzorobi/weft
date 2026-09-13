@@ -207,11 +207,24 @@ def main() -> None:
                 from weft.reporting.html import build_html_report
                 from weft.reporting.pdf import build_pdf_from_markdown, pdf_available
                 title = f"Weft report — {eng.client}"
-                st.session_state["report_html"] = build_html_report(md, title=title)
+                html = build_html_report(md, title=title)
+                st.session_state["report_html"] = html
                 try:
-                    st.session_state["report_pdf"] = build_pdf_from_markdown(md, title=title) if pdf_available() else None
+                    pdf = build_pdf_from_markdown(md, title=title) if pdf_available() else None
                 except Exception:
-                    st.session_state["report_pdf"] = None
+                    pdf = None
+                st.session_state["report_pdf"] = pdf
+                # also save to a visible folder (the app window has no download bar)
+                from weft.ui.reports import save_report
+                st.session_state["report_dir"] = save_report(eng.id, md=md, html=html, pdf=pdf)
+        if st.session_state.get("report_dir"):
+            rd = st.session_state["report_dir"]
+            sc, so = st.columns([3, 1])
+            sc.success(f"📂 Saved to `{rd}`")
+            if so.button("Open folder", use_container_width=True):
+                import subprocess
+                subprocess.Popen(["xdg-open", rd], start_new_session=True,
+                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         if "report_md" in st.session_state:
             d1, d2, d3, d4 = st.columns(4)
             if st.session_state.get("report_pdf"):

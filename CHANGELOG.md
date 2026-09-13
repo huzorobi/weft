@@ -2,6 +2,16 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.56.0] — 2026-09-13
+
+Reports saved to a visible folder.
+
+### Added
+- Because the Chromium app window has no download bar, "Generate report" now also **saves the
+  report** (Markdown, HTML, PDF) to `~/weft-reports/<engagement-id>/` and shows the operator that
+  path with an **Open folder** button. The browser download buttons still work; this just makes
+  the files easy to find. `weft.ui.reports.save_report` holds the logic.
+
 ## [0.55.0] — 2026-09-13
 
 New-search / clear button.
