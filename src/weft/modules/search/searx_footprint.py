@@ -52,16 +52,33 @@ class SearxFootprint(Module):
         return _parse_results(data, entity, self.name, self.reliability)
 
 
+def _seed_tokens(value: str) -> list[str]:
+    return [t for t in value.lower().replace(",", " ").split() if len(t) >= 3]
+
+
+def _relevant(result: dict, seed_value: str, tokens: list[str]) -> bool:
+    """Keep a result only if it actually mentions the seed — search engines fuzzy-rank, so a
+    query for 'Robert Huzo' can return pages that never contain 'huzo' (a poison for later
+    reasoning). Require the whole seed, or all of its significant tokens, in the text/url."""
+    hay = " ".join(str(result.get(k, "")) for k in ("title", "content", "url")).lower()
+    if seed_value.lower() in hay:
+        return True
+    return bool(tokens) and all(t in hay for t in tokens)
+
+
 def _parse_results(data: dict, seed: Entity, source: str, reliability: float, *, cap: int = 25) -> list[Entity]:
     out: list[Entity] = []
     seen: set[str] = set()
-    for r in (data.get("results") or [])[:cap]:
+    tokens = _seed_tokens(seed.value)
+    for r in (data.get("results") or []):
         url = r.get("url")
-        if not url or url in seen:
+        if not url or url in seen or not _relevant(r, seed.value, tokens):
             continue
         seen.add(url)
         out.append(Entity.make(EntityType.URL, url, source_module=source,
                                confidence=reliability, seed_id=seed.seed_id,
                                metadata={"title": r.get("title"), "engine": r.get("engine"),
                                          "mentions": seed.value}))
+        if len(out) >= cap:
+            break
     return out

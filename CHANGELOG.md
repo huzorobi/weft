@@ -2,6 +2,22 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.57.0] — 2026-09-13
+
+Less identity-resolution and search noise.
+
+### Fixed
+- **Junk handles no longer cluster.** Path words parsed out of profile URLs (members, user,
+  profile, index, forum, …) and 1–2 character handles are excluded from identity clustering, so
+  a URL fragment like "members" is never reported as an identity.
+- **Cluster confidence now reflects independent corroboration, not handle count.** A single
+  module checking a *guessed* handle across many sites is weak; several independent modules
+  agreeing on a handle is strong. This stops guessed username variations (rhuzo, roberthuzo, …)
+  from showing as confidence 1.00 and becoming HIGH priority alerts.
+- **`search_footprint` drops fuzzy non-matches.** A result is kept only if it actually mentions
+  the seed (the whole value, or all its significant tokens), so a search engine fuzzy-ranking an
+  unrelated page (e.g. "Hürzeler" for "Robert Huzo") no longer poisons the AI's reasoning.
+
 ## [0.56.0] — 2026-09-13
 
 Reports saved to a visible folder.

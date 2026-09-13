@@ -97,3 +97,31 @@ def test_no_pgp_metadata_no_strong_cluster():
     g.upsert_entity(_e(EntityType.EMAIL, "b@x.com"))
     res = resolve_identities(g)
     assert not any(c.label.startswith("pgp:") for c in res.clusters)
+
+
+def test_junk_handles_not_clustered():
+    g = InMemoryGraph()
+    # "members" appears as a handle from forum URLs — must never be an identity cluster
+    g.upsert_entity(_e(EntityType.SOCIAL_PROFILE, "https://forum.a/members/"))
+    g.upsert_entity(_e(EntityType.SOCIAL_PROFILE, "https://forum.b/members/"))
+    g.upsert_entity(_e(EntityType.USERNAME, "members"))
+    res = resolve_identities(g)
+    assert not any(c.label == "members" for c in res.clusters)
+
+
+def test_cluster_confidence_scales_with_independent_sources():
+    g = InMemoryGraph()
+    # a single module checking a guessed handle across many sites = weak (low confidence)
+    for i in range(6):
+        g.upsert_entity(_e(EntityType.SOCIAL_PROFILE, f"https://s{i}.example/roberth", src="username_check"))
+    g.upsert_entity(_e(EntityType.USERNAME, "roberth", src="username_check"))
+    weak = [c for c in resolve_identities(g).clusters if c.label == "roberth"][0]
+    assert weak.confidence <= 0.6            # one source -> weak, not 1.0
+
+    g2 = InMemoryGraph()
+    # the same handle corroborated by several independent modules = strong
+    for src in ("github_user", "sherlock", "keybase", "npm"):
+        g2.upsert_entity(_e(EntityType.SOCIAL_PROFILE, f"https://{src}.example/huzorobi", src=src))
+    g2.upsert_entity(_e(EntityType.USERNAME, "huzorobi", src="search_footprint"))
+    strong = [c for c in resolve_identities(g2).clusters if c.label == "huzorobi"][0]
+    assert strong.confidence >= 0.85         # multi-source -> strong

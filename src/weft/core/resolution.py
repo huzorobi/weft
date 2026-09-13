@@ -21,6 +21,15 @@ from weft.core.graphstore import InMemoryGraph
 _IDENTITY_TYPES = (EntityType.USERNAME, EntityType.SOCIAL_PROFILE, EntityType.EMAIL,
                    EntityType.NAME, EntityType.PERSON)
 
+# Path words that show up as "handles" when parsing profile URLs but are not identities
+# (e.g. .../forum/members/, .../user/, .../index) — never cluster on these.
+_JUNK_HANDLES = frozenset({
+    "members", "member", "user", "users", "profile", "profiles", "index", "home", "about",
+    "search", "login", "logout", "signin", "signup", "admin", "settings", "account", "accounts",
+    "page", "pages", "view", "forum", "forums", "topic", "thread", "threads", "post", "posts",
+    "id", "u", "p", "en", "www", "me", "public", "default", "unknown", "null", "none",
+})
+
 
 @dataclass(frozen=True)
 class IdentityCluster:
@@ -73,20 +82,28 @@ def resolve_identities(graph: InMemoryGraph, *, name_sim: float = 0.86) -> Resol
     used_names: set[str] = set()
 
     for handle, members in by_handle.items():
-        if len(members) < 2:
+        if len(members) < 2 or len(handle) < 3 or handle in _JUNK_HANDLES:
             continue
         keys = [m.key() for m in members]
-        basis = f"shared handle '{handle}' across {len(members)} accounts/sources"
-        # fold in any NAME whose tokens the handle contains (e.g. 'roberthuzo' <- Robert Huzo)
+        # Confidence rests on how many INDEPENDENT sources corroborate the handle, not on how
+        # many accounts share it. One module checking a guessed handle across 20 sites is weak;
+        # several independent modules agreeing on a handle is strong.
+        n_sources = len({m.source_module for m in members if m.source_module})
+        matched_name = None
         for n in names:
             toks = _name_tokens(n.value)
             if toks and all(t in handle for t in toks):
                 keys.append(n.key())
                 used_names.add(n.key())
-                basis += f"; matches name '{n.value}'"
-        conf = min(1.0, 0.55 + 0.1 * len(members))
+                matched_name = n.value
+        conf = min(0.95, 0.4 + 0.15 * n_sources)
+        if matched_name:
+            conf = min(0.97, conf + 0.1)   # a matching real name is corroboration
+        basis = (f"shared handle '{handle}' — corroborated by {n_sources} independent source(s) "
+                 f"across {len(members)} account(s)"
+                 + (f"; matches name '{matched_name}'" if matched_name else ""))
         res.clusters.append(IdentityCluster(label=handle, keys=tuple(dict.fromkeys(keys)),
-                                             confidence=conf, basis=basis))
+                                             confidence=round(conf, 2), basis=basis))
 
     # 1.5) strong cryptographic links: entities bound by a shared PGP key are the same person
     #      with far higher certainty than a handle heuristic (a key proves control of its uids).

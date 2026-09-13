@@ -47,14 +47,27 @@ def test_wayback_header_row_skipped():
 # --- search_footprint (SearXNG) --------------------------------------------
 
 def test_searx_footprint_parses_results():
+    # results are kept only if they actually mention the seed ("Robert Huzo")
     http = FakeHttp({"/search": (200, {"results": [
-        {"url": "https://a.example/1", "title": "hit one", "engine": "google"},
-        {"url": "https://b.example/2", "title": "hit two", "engine": "bing"},
-        {"url": "https://a.example/1", "title": "dup", "engine": "ddg"},  # dedup
+        {"url": "https://a.example/1", "title": "Robert Huzo on LinkedIn", "engine": "google"},
+        {"url": "https://b.example/2", "title": "profile", "content": "robert huzo, security", "engine": "bing"},
+        {"url": "https://a.example/1", "title": "dup Robert Huzo", "engine": "ddg"},  # dedup
     ]})})
     out = asyncio.run(SearxFootprint().run(_e(EntityType.NAME, "Robert Huzo"), _ctx(http, searxng="http://sx:8080")))
     assert {e.value for e in out} == {"https://a.example/1", "https://b.example/2"}
     assert all(e.type is EntityType.URL for e in out)
+
+
+def test_searx_footprint_drops_irrelevant_fuzzy_hits():
+    # a search engine can fuzzy-rank a page that never mentions the seed (e.g. "Hürzeler" for
+    # "Robert Huzo") — it must be dropped so it does not poison later reasoning.
+    http = FakeHttp({"/search": (200, {"results": [
+        {"url": "https://bbc.co.uk/sport/hurzeler-signs", "title": "Hurzeler signs new deal",
+         "content": "Brighton manager", "engine": "google"},
+        {"url": "https://real.example/robert-huzo", "title": "Robert Huzo", "engine": "bing"},
+    ]})})
+    out = asyncio.run(SearxFootprint().run(_e(EntityType.NAME, "Robert Huzo"), _ctx(http, searxng="http://sx:8080")))
+    assert {e.value for e in out} == {"https://real.example/robert-huzo"}   # Hurzeler dropped
 
 
 def test_searx_health_down_when_unreachable():
