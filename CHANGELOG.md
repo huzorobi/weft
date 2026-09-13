@@ -2,6 +2,18 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.32.0] — 2026-09-13
+
+Developer footprint pack.
+
+### Added
+- `hackernews` (USERNAME): resolves a username to its Hacker News profile — karma, account
+  age, submissions — and extracts any links from the profile's "about" text (personal sites,
+  other handles) as their own entities. Keyless, passive.
+- `npm` (USERNAME): packages a developer publishes on npm, each a package page plus its source
+  repository link (usually GitHub), filtered to packages the username actually
+  publishes/maintains. Keyless, passive.
+
 ## [0.31.0] — 2026-09-13
 
 Surface + footprint pack.
