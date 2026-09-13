@@ -2,6 +2,16 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.49.0] — 2026-09-13
+
+Restart-services button.
+
+### Added
+- When any service is down, the sidebar status panel shows a "🔄 Restart services" button that
+  brings the stack (Neo4j, SearXNG, Tor) and the local AI back up from inside the UI — no need to
+  reach for the desktop icon — then refreshes the status dots. Backed by `weft.sh --services`
+  (start the services only, no UI) and `weft.ui.services`.
+
 ## [0.48.0] — 2026-09-13
 
 Live status dots + app-window launch.

@@ -54,6 +54,12 @@ def main() -> None:
         for col, (svc, ok) in zip(cols, status.items()):
             col.markdown(f"{'🟢' if ok else '🔴'} {svc}")
         st.caption("Green = reachable. Refresh the page to re-check.")
+        if not all_live(status) and st.button("🔄 Restart services", use_container_width=True):
+            from weft.ui.services import restart_services
+            with st.spinner("Starting services (this can take ~30s while Neo4j boots)…"):
+                ok, msg = restart_services()
+            (st.success if ok else st.error)(msg)
+            st.rerun()
         st.divider()
 
     # --- sidebar: shutdown control ---

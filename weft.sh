@@ -76,6 +76,13 @@ if [ "${1:-}" = "--stop" ]; then
   exit 0
 fi
 
+# Bring up just the services (stack + local AI), no UI/browser — used by the UI's "restart" button.
+if [ "${1:-}" = "--services" ]; then
+  have_docker && start_stack || echo "⚠ Docker not available."
+  ensure_ollama
+  exit 0
+fi
+
 # first run: create the venv + install deps
 if [ ! -x .venv/bin/streamlit ]; then
   echo "→ first run: setting up weft (venv + deps)…"
