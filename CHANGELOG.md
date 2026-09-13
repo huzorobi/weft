@@ -2,6 +2,19 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.42.0] — 2026-09-13
+
+STIX 2.1 + MISP export.
+
+### Added
+- `reporting.stix.to_stix_bundle`: a STIX 2.1 bundle of the graph — observable objects
+  (email-addr, domain-name, ipv4-addr, url), identities (individuals/organisations), and
+  vulnerabilities, linked by relationships from the edges. Object ids are deterministic (uuid5
+  of type+value) so re-export is stable. For OpenCTI / STIX consumers.
+- `reporting.stix.to_misp_event`: a MISP event with typed, deduplicated attributes (ip-dst,
+  domain, url, email-src, vulnerability, target-user/org) carrying source and confidence.
+No new dependency — standards-shaped JSON is emitted directly.
+
 ## [0.41.0] — 2026-09-13
 
 Differential runs (monitoring).
