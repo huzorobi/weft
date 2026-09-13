@@ -80,6 +80,14 @@ class Orchestrator:
         queue: deque[tuple[Entity, int]] = deque()
         seen: set[str] = set()
 
+        # Log the run configuration up front — in particular the ToS-flagged opt-in, so the
+        # operator's per-run choice is on the record (a compliance requirement).
+        self._audit.record(
+            action="run_start", engagement_id=result.engagement_id, operator=operator,
+            detail={"allow_tos_risk": allow_tos_risk, "depth_cap": self._depth_cap,
+                    "seeds": [s.key() for s in seeds]},
+        )
+
         # 1. Gate each seed. Only allowed seeds enter the queue.
         for seed in seeds:
             decision = self._gate.validate(

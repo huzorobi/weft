@@ -20,7 +20,8 @@ from weft.compliance.engagement import (
     ScopeGate,
     ScopeOverride,
 )
-from weft.config import EnvSecrets
+from weft.config import load_settings
+from weft.core.secrets import default_secrets
 from weft.core.entity import Entity, EntityType
 from weft.core.graphstore import InMemoryGraph
 from weft.core.module import Module
@@ -86,7 +87,8 @@ def execute_run(
         orch = Orchestrator(
             modules=mods, graph=graph, audit=audit,
             rate_limiter=TokenBucketRateLimiter(rate=5, capacity=5),
-            secrets=EnvSecrets(), http=http, gate=ScopeGate(), depth_cap=depth_cap,
+            secrets=default_secrets(load_settings().secrets_file), http=http,
+            gate=ScopeGate(), depth_cap=depth_cap,
         )
         try:
             return await orch.run([seed], engagement=engagement, acceptance=acceptance,

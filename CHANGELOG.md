@@ -2,6 +2,17 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.9.0] — 2026-09-13
+
+Phase 6 — hardening.
+
+### Added
+- `core.secrets`: an injectable secrets provider (env, on-disk file, chained), so a vault
+  can slot in without touching a module. Modules read the injected provider, never the
+  environment directly. Config: `SECRETS_FILE`.
+- The orchestrator logs a `run_start` audit event recording the ToS-flagged opt-in, depth
+  cap, and seeds, so the operator's per-run choice is on the record.
+
 ## [0.8.0] — 2026-09-13
 
 Phase 5 — lifecycle: purge and retention.

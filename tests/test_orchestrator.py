@@ -130,3 +130,12 @@ def test_every_module_call_is_audited():
     _run(orch, [_seed()], engagement=_eng(), acceptance=_accept())
     runs = [e for e in store.all() if e.action == "module_run"]
     assert runs, "expected at least one module_run audit event"
+
+
+def test_run_start_logs_tos_optin():
+    m = StaticModule("m", [EntityType.DOMAIN], [_child("a.example.com")])
+    orch, store = _orchestrator([m])
+    _run(orch, [_seed()], engagement=_eng(), acceptance=_accept(), allow_tos_risk=True)
+    starts = [e for e in store.all() if e.action == "run_start"]
+    assert starts and starts[0].detail["allow_tos_risk"] is True
+    assert "domain:example.com" in starts[0].detail["seeds"]

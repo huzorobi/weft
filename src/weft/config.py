@@ -44,6 +44,9 @@ try:
         ollama_url: str = "http://localhost:11434"
         reasoner_model: str = "llama3.2:3b"
 
+        # Optional on-disk secrets file (chained after the environment). Vault slots in here.
+        secrets_file: str | None = None
+
     def load_settings() -> "Settings":
         return Settings()
 
@@ -62,6 +65,7 @@ except Exception:  # pragma: no cover - fallback when pydantic-settings is absen
         depth_default: int = int(os.getenv("DEPTH_DEFAULT", "2"))
         ollama_url: str = os.getenv("OLLAMA_URL", "http://localhost:11434")
         reasoner_model: str = os.getenv("REASONER_MODEL", "llama3.2:3b")
+        secrets_file: str | None = os.getenv("SECRETS_FILE")
 
     def load_settings() -> "Settings":
         return Settings()
