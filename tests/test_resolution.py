@@ -67,3 +67,33 @@ def test_report_includes_identity_clusters():
     md = build_report(eng, g, reasoner=NullReasoner())
     assert "## Identity clusters" in md
     assert "shared handle 'rob'" in md
+
+
+def _em(etype, val, meta, src="pgp_keyservers"):
+    return Entity.make(etype, val, source_module=src, confidence=0.8, seed_id="s", metadata=meta)
+
+
+def test_shared_pgp_key_creates_strong_cluster():
+    g = InMemoryGraph()
+    # seed email + an alias email + a name, all bound to the seed's PGP key
+    g.upsert_entity(_e(EntityType.EMAIL, "torvalds@kernel.org"))
+    g.upsert_entity(_em(EntityType.EMAIL, "torvalds@linux-foundation.org",
+                        {"linked_via": "shared PGP key", "with_email": "torvalds@kernel.org"}))
+    g.upsert_entity(_em(EntityType.NAME, "Linus Torvalds",
+                        {"linked_via": "PGP key uid", "for_email": "torvalds@kernel.org"}))
+    res = resolve_identities(g)
+    pgp = [c for c in res.clusters if c.label.startswith("pgp:")]
+    assert pgp, "expected a PGP-key cluster"
+    c = pgp[0]
+    assert c.confidence == 0.9 and "cryptographic" in c.basis
+    assert "email:torvalds@kernel.org" in c.keys              # anchor email folded in
+    assert "email:torvalds@linux-foundation.org" in c.keys    # alias
+    assert any(k.startswith("name:") for k in c.keys)          # name uid
+
+
+def test_no_pgp_metadata_no_strong_cluster():
+    g = InMemoryGraph()
+    g.upsert_entity(_e(EntityType.EMAIL, "a@x.com"))
+    g.upsert_entity(_e(EntityType.EMAIL, "b@x.com"))
+    res = resolve_identities(g)
+    assert not any(c.label.startswith("pgp:") for c in res.clusters)

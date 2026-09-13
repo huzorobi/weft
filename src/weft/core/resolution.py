@@ -2,9 +2,9 @@
 
 Exact-key dedup collapses "email:x" seen twice, but it cannot tell that a GitHub handle,
 a Reddit handle, and an email local-part are one person, nor split two people who share a
-common name. This pass clusters person-identifying entities on shared signals — the same
-handle across platforms, a handle that contains a name's tokens, an email local-part that
-matches a handle — and records weaker leads as "possibly the same".
+common name. This pass clusters person-identifying entities on shared signals — a shared PGP key (a cryptographic
+link), the same handle across platforms, a handle that contains a name's tokens, an email
+local-part that matches a handle — and records weaker leads as "possibly the same".
 
 It never hard-merges nodes; it produces clusters and SAME_AS / POSSIBLY_SAME_AS links with
 scores, so a coincidental match stays visible and reversible. Deterministic and explainable.
@@ -87,6 +87,25 @@ def resolve_identities(graph: InMemoryGraph, *, name_sim: float = 0.86) -> Resol
         conf = min(1.0, 0.55 + 0.1 * len(members))
         res.clusters.append(IdentityCluster(label=handle, keys=tuple(dict.fromkeys(keys)),
                                              confidence=conf, basis=basis))
+
+    # 1.5) strong cryptographic links: entities bound by a shared PGP key are the same person
+    #      with far higher certainty than a handle heuristic (a key proves control of its uids).
+    by_key_anchor: dict[str, set[str]] = {}
+    for e in graph.nodes.values():
+        md = e.metadata if isinstance(e.metadata, dict) else {}
+        if "PGP key" in str(md.get("linked_via", "")):
+            anchor = md.get("with_email") or md.get("for_email")
+            if anchor:
+                grp = by_key_anchor.setdefault(str(anchor).lower(), set())
+                grp.add(e.key())
+                anchor_key = f"email:{str(anchor).lower()}"
+                if anchor_key in graph.nodes:
+                    grp.add(anchor_key)
+    for anchor, keys in by_key_anchor.items():
+        if len(keys) >= 2:
+            res.clusters.append(IdentityCluster(
+                label=f"pgp:{anchor}", keys=tuple(sorted(keys)), confidence=0.9,
+                basis=f"shared PGP key with {anchor} (cryptographic link)"))
 
     # 2) weak leads: fuzzy-similar names that were not already tied to a handle cluster
     free = [n for n in names if n.key() not in used_names]

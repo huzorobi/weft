@@ -2,6 +2,17 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.37.0] — 2026-09-13
+
+Cryptographic identity resolution.
+
+### Changed
+- `resolve_identities` now clusters entities bound by a **shared PGP key** (from
+  `pgp_keyservers`) as a high-confidence identity cluster (0.9), distinct from the heuristic
+  handle/name matching. A PGP key proves control of its uids, so two emails and a name on one
+  key are the same person with far more certainty than a shared handle. Still never hard-merges
+  — it records an explainable cluster with its basis.
+
 ## [0.36.0] — 2026-09-13
 
 Risk & identity correlation rules — the enrichment sources now surface as findings.
