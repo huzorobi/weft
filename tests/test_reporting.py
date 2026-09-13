@@ -87,3 +87,24 @@ def test_is_grounded_unit():
     by_type = {"email": [Entity.make(EntityType.EMAIL, "rob@example.com", source_module="s", confidence=1.0, seed_id="s")]}
     assert _is_grounded("Contact rob@example.com for details.", by_type)
     assert not _is_grounded("Also fake@other.com is linked.", by_type)
+
+
+def test_identity_assessment_section_present_and_grounded():
+    md = build_report(_eng(), _graph(), reasoner=_FakeReasoner(
+        "The GitHub profile https://github.com/rob and email rob@example.com share the name Robert Huzo. "
+        "Confidence: moderate."), seeds=["rob@example.com"])
+    assert "## Identity assessment" in md
+    assert "Confidence: moderate" in md
+
+
+def test_identity_assessment_hallucination_discarded():
+    md = build_report(_eng(), _graph(), reasoner=_FakeReasoner(
+        "Also linked to https://made-up-site.example. Confidence: strong."), seeds=["rob@example.com"])
+    assert "made-up-site" not in md
+    assert "failed the grounding check" in md
+
+
+def test_identity_assessment_fallback_without_model():
+    md = build_report(_eng(), _graph(), reasoner=NullReasoner())
+    assert "## Identity assessment" in md
+    assert "No local model available for an identity assessment" in md

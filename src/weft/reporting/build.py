@@ -27,6 +27,18 @@ _SYSTEM = (
     "British English. Neutral, professional, three short paragraphs at most."
 )
 
+_ASSESS_SYSTEM = (
+    "You are an OSINT analyst judging IDENTITY CORRELATION for an authorised engagement. "
+    "Given a seed identity under investigation and entities collected from several sources, "
+    "assess whether they plausibly belong to ONE individual. List the corroborating signals "
+    "(the same name or handle appearing across independent sources, a matching organisation or "
+    "location) and any CONFLICTS (a different location, a mismatched name, a reused common "
+    "handle). Weigh independent corroboration higher than a single weak hit. Finish with a line "
+    "exactly of the form 'Confidence: strong' or moderate or weak or insufficient. Use ONLY the "
+    "facts given; never invent. If the evidence is thin or contradictory, say insufficient. This "
+    "is an assessment for a human to confirm, not a determination. British English, concise."
+)
+
 
 def build_report(engagement, graph: InMemoryGraph, *, reasoner: Reasoner | None = None,
                  seeds: list[str] | None = None, now: datetime | None = None) -> str:
@@ -77,6 +89,20 @@ def build_report(engagement, graph: InMemoryGraph, *, reasoner: Reasoner | None 
     else:
         a("_No local model available, or the generated narrative failed the grounding check; "
           "the evidence below is authoritative._")
+    a("")
+
+    # ---- AI identity assessment (grounded, optional) ----
+    assessment = _assess_identity(reasoner, engagement, by_type, seeds)
+    a("## Identity assessment")
+    a("")
+    if assessment:
+        a("*AI identity assessment (an inference for a human to confirm, not proof; the deterministic "
+          "confidence scores remain authoritative).*")
+        a("")
+        a(assessment)
+    else:
+        a("_No local model available for an identity assessment, or it failed the grounding check. "
+          "Judge identity from the corroboration and confidence in the evidence below._")
     a("")
 
     # ---- social presence ----
@@ -135,6 +161,30 @@ def _narrate(reasoner: Reasoner, engagement, by_type: dict, seeds) -> str:
     if not narrative or not _is_grounded(narrative, by_type):
         return ""
     return narrative
+
+
+def _assess_identity(reasoner: Reasoner, engagement, by_type: dict, seeds) -> str:
+    """Ask the model whether the collected entities cohere as one identity matching the seed.
+
+    Output is a labelled inference (corroboration, conflicts, a confidence band), never an
+    auto-merge and never a deterministic finding. Discarded if it fails the grounding check.
+    """
+    if not reasoner.available:
+        return ""
+    facts = []
+    if seeds:
+        facts.append(f"Seed identity under investigation: {', '.join(seeds)}.")
+    for t, ents in sorted(by_type.items()):
+        for e in ents[:20]:
+            srcs = ", ".join(e.metadata.get("sources", [])) if isinstance(e.metadata, dict) else ""
+            facts.append(f"- {t}: {e.value} (confidence {e.confidence:.2f}"
+                         + (f"; sources: {srcs}" if srcs else "") + ")")
+    prompt = ("Assess whether these collected entities belong to the same individual as the seed. "
+              "List corroborating signals and conflicts, then the confidence line.\n\n" + "\n".join(facts))
+    out = reasoner.narrate(system=_ASSESS_SYSTEM, prompt=prompt)
+    if not out or not _is_grounded(out, by_type):
+        return ""
+    return out
 
 
 def _is_grounded(narrative: str, by_type: dict) -> bool:

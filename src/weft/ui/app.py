@@ -91,7 +91,10 @@ def main() -> None:
         seed_type = st.selectbox("Seed type", SEED_TYPES, format_func=lambda t: t.value)
         seed_value = st.text_input("Seed value")
         depth = st.slider("Depth", 1, 3, 2)
-        allow_tos = st.checkbox("Allow ToS-flagged sources (logged)", value=False)
+        allow_tos = st.checkbox("Enable enumeration sources — maigret/sherlock/holehe/phoneinfoga (ToS-flagged, logged)",
+                                value=True,
+                                help="On by default for maximum collection via public enumeration. Every use is "
+                                     "logged. Uncheck to stay strictly on official/free-API sources.")
         override_reason = st.text_input("Out-of-scope override reason (optional, logged)")
 
         st.markdown("**Responsibility statement**")

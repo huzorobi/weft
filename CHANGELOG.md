@@ -2,6 +2,22 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.7.0] — 2026-09-13
+
+Maximum-collection default and AI identity assessment.
+
+### Changed
+- Enumeration sources (maigret, sherlock, holehe, phoneinfoga) are ON by default in the UI
+  for maximum collection via public enumeration. The choice is still logged and can be
+  turned off to stay on official/free-API sources only.
+
+### Added
+- AI identity assessment in the report: the local model compares the collected entities
+  against the seed and judges whether they belong to one individual, listing corroborating
+  signals and conflicts and ending with a confidence band (strong/moderate/weak/insufficient).
+  A labelled inference for a human to confirm, grounded (discarded if it names anything not
+  in the graph), never an auto-merge and never a deterministic finding.
+
 ## [0.6.0] — 2026-09-13
 
 Report narration with a local AI, and social-presence grouping.
