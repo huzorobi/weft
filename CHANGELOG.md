@@ -2,6 +2,15 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.51.0] — 2026-09-13
+
+Clearer search label.
+
+### Changed
+- The "Client / case" field (which defaulted to a confusing "Ad-hoc") is now "Case label
+  (optional)" — a plain name to find a search later in the audit log. Left blank, the search is
+  named after its seed instead of a meaningless default.
+
 ## [0.50.0] — 2026-09-13
 
 Simpler UI: one-time terms, near-automatic engagement, always-visible search.

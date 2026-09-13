@@ -93,7 +93,7 @@ def _auto_engagement(client: str, seed_type: EntityType, seed_value: str) -> Eng
     today = date.today()
     return Engagement(
         id=f"WEFT-{datetime.now():%Y%m%d-%H%M%S}",
-        client=(client.strip() or "Ad-hoc"),
+        client=(client.strip() or seed_value.strip() or "search"),   # blank -> name it after the seed
         scope_ref="operator accepted terms at launch",
         lawful_basis="operator-asserted (terms accepted)",
         authorised_targets=[seed_value.strip()],
@@ -121,7 +121,10 @@ def main() -> None:
     # --- the search form is always visible ---
     st.subheader("New search")
     c1, c2, c3 = st.columns([1, 1, 2])
-    client = c1.text_input("Client / case", value="Ad-hoc", help="A label for this investigation.")
+    client = c1.text_input("Case label (optional)", value="",
+                           placeholder="e.g. my-investigation",
+                           help="Just a name to find this search later in the audit log and saved runs. "
+                                "Leave blank and it is named after the seed.")
     seed_type = c2.selectbox("Seed type", SEED_TYPES, format_func=lambda t: t.value)
     seed_value = c3.text_input("Seed value", placeholder=SEED_HINT.get(seed_type, ""),
                                help="What to investigate: a domain, email, username, name, phone, "
