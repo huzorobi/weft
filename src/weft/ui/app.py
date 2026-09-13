@@ -52,11 +52,15 @@ def _sidebar_system() -> None:
         cols = st.columns(len(status))
         for col, (svc, ok) in zip(cols, status.items()):
             col.markdown(f"{'🟢' if ok else '🔴'} {svc}")
-        if not all_live(status) and st.button("🔄 Restart services", use_container_width=True):
+        b1, b2 = st.columns(2)
+        if b1.button("🔄 Restart", use_container_width=True,
+                     help="Start any stopped services (Neo4j, SearXNG, Tor, Ollama)."):
             from weft.ui.services import restart_services
             with st.spinner("Starting services (~30s while Neo4j boots)…"):
                 ok, msg = restart_services()
             (st.success if ok else st.error)(msg)
+            st.rerun()
+        if b2.button("↻ Re-check", use_container_width=True, help="Re-read the service status."):
             st.rerun()
         st.divider()
         with st.expander("⏻  Shut down Weft"):

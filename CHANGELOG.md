@@ -2,6 +2,15 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.52.0] — 2026-09-13
+
+Always-visible service controls.
+
+### Changed
+- The sidebar status panel now always shows a **🔄 Restart** button (start any stopped
+  services) and a **↻ Re-check** button (re-read status), instead of hiding Restart unless a
+  service was already down. Restart is idempotent — it only starts what is not running.
+
 ## [0.51.0] — 2026-09-13
 
 Clearer search label.
