@@ -2,6 +2,20 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.13.0] — 2026-09-13
+
+Deterministic correlation engine (the evidence layer).
+
+### Added
+- `core.correlation.CorrelationEngine`: runs rules over the collected graph to surface
+  patterns — presence across platforms, a name corroborated by independent sources, a
+  person tied to organisations, an email tied to accounts, a shared registrant, IP geo
+  clusters, hub nodes, and multi-source anchors. Each is a `Finding` with a confidence and
+  its provenance (the sources behind it). Deterministic and repeatable; the model reasons
+  about these findings and never invents them.
+- The report gains a "Findings (correlations)" section, and the findings are fed to the
+  narrative and identity-assessment prompts as grounded evidence.
+
 ## [0.12.0] — 2026-09-13
 
 The autonomous hunter — LLM-guided pivoting.

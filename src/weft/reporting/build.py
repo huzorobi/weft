@@ -49,6 +49,9 @@ def build_report(engagement, graph: InMemoryGraph, *, reasoner: Reasoner | None 
     for e in nodes:
         by_type.setdefault(e.type.value, []).append(e)
 
+    from weft.core.correlation import CorrelationEngine
+    findings = CorrelationEngine().run(graph)
+
     lines: list[str] = []
     a = lines.append
 
@@ -78,8 +81,22 @@ def build_report(engagement, graph: InMemoryGraph, *, reasoner: Reasoner | None 
         a(f"- Breakdown: {counts}.")
     a("")
 
+    # ---- deterministic correlations (the evidence layer) ----
+    a("## Findings (correlations)")
+    a("")
+    if findings:
+        a("Deterministic patterns across the collected entities. Each carries a confidence and the "
+          "sources behind it. The AI sections below reason about these; they do not add to them.")
+        a("")
+        for f in findings:
+            src = f", sources: {', '.join(f.sources)}" if f.sources else ""
+            a(f"- **[{f.strength}]** {f.title} — {f.detail} _(confidence {f.confidence:.2f}{src})_")
+    else:
+        a("_No cross-entity correlations found yet._")
+    a("")
+
     # ---- AI narrative (grounded, optional) ----
-    narrative = _narrate(reasoner, engagement, by_type, seeds)
+    narrative = _narrate(reasoner, engagement, by_type, seeds, findings)
     a("## Narrative")
     a("")
     if narrative:
@@ -92,7 +109,7 @@ def build_report(engagement, graph: InMemoryGraph, *, reasoner: Reasoner | None 
     a("")
 
     # ---- AI identity assessment (grounded, optional) ----
-    assessment = _assess_identity(reasoner, engagement, by_type, seeds)
+    assessment = _assess_identity(reasoner, engagement, by_type, seeds, findings)
     a("## Identity assessment")
     a("")
     if assessment:
@@ -146,7 +163,7 @@ def build_report(engagement, graph: InMemoryGraph, *, reasoner: Reasoner | None 
     return "\n".join(lines)
 
 
-def _narrate(reasoner: Reasoner, engagement, by_type: dict, seeds) -> str:
+def _narrate(reasoner: Reasoner, engagement, by_type: dict, seeds, findings=None) -> str:
     if not reasoner.available:
         return ""
     facts = [f"Engagement client: {engagement.client}."]
@@ -155,6 +172,8 @@ def _narrate(reasoner: Reasoner, engagement, by_type: dict, seeds) -> str:
     for t, ents in sorted(by_type.items()):
         vals = ", ".join(e.value for e in ents[:15])
         facts.append(f"{t} ({len(ents)}): {vals}")
+    for f in (findings or [])[:10]:
+        facts.append(f"Correlation: {f.title} — {f.detail}")
     prompt = ("Write a short factual reconnaissance summary from these facts. Do not add anything not "
               "listed. Facts:\n" + "\n".join(facts))
     narrative = reasoner.narrate(system=_SYSTEM, prompt=prompt)
@@ -163,7 +182,7 @@ def _narrate(reasoner: Reasoner, engagement, by_type: dict, seeds) -> str:
     return narrative
 
 
-def _assess_identity(reasoner: Reasoner, engagement, by_type: dict, seeds) -> str:
+def _assess_identity(reasoner: Reasoner, engagement, by_type: dict, seeds, findings=None) -> str:
     """Ask the model whether the collected entities cohere as one identity matching the seed.
 
     Output is a labelled inference (corroboration, conflicts, a confidence band), never an
@@ -179,6 +198,8 @@ def _assess_identity(reasoner: Reasoner, engagement, by_type: dict, seeds) -> st
             srcs = ", ".join(e.metadata.get("sources", [])) if isinstance(e.metadata, dict) else ""
             facts.append(f"- {t}: {e.value} (confidence {e.confidence:.2f}"
                          + (f"; sources: {srcs}" if srcs else "") + ")")
+    for f in (findings or [])[:10]:
+        facts.append(f"- correlation [{f.strength}]: {f.title} — {f.detail}")
     prompt = ("Assess whether these collected entities belong to the same individual as the seed. "
               "List corroborating signals and conflicts, then the confidence line.\n\n" + "\n".join(facts))
     out = reasoner.narrate(system=_ASSESS_SYSTEM, prompt=prompt)
