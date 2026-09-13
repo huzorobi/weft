@@ -192,16 +192,35 @@ def main() -> None:
         model = col_a.text_input("Local model for the AI narrative (Ollama; clear to skip)",
                                  value=settings.reasoner_model)
         if col_b.button("Generate report", use_container_width=True):
-            reasoner = OllamaReasoner(model, base_url=settings.ollama_url) if model.strip() else None
-            st.session_state["report_md"] = build_report(
-                eng, graph, reasoner=reasoner, seeds=[st.session_state.get("seed_value")])
+            with st.spinner("Writing the report (AI narrative + PDF)…"):
+                reasoner = OllamaReasoner(model, base_url=settings.ollama_url) if model.strip() else None
+                md = build_report(eng, graph, reasoner=reasoner, seeds=[st.session_state.get("seed_value")])
+                st.session_state["report_md"] = md
+                from weft.reporting.html import build_html_report
+                from weft.reporting.pdf import build_pdf_from_markdown, pdf_available
+                title = f"Weft report — {eng.client}"
+                st.session_state["report_html"] = build_html_report(md, title=title)
+                try:
+                    st.session_state["report_pdf"] = build_pdf_from_markdown(md, title=title) if pdf_available() else None
+                except Exception:
+                    st.session_state["report_pdf"] = None
         if "report_md" in st.session_state:
-            st.download_button("⬇ report.md", st.session_state["report_md"],
-                               file_name=f"{eng.id}-report.md", mime="text/markdown")
+            d1, d2, d3, d4 = st.columns(4)
+            if st.session_state.get("report_pdf"):
+                d1.download_button("⬇ PDF", st.session_state["report_pdf"],
+                                   file_name=f"{eng.id}-report.pdf", mime="application/pdf",
+                                   use_container_width=True)
+            d2.download_button("⬇ HTML", st.session_state.get("report_html", ""),
+                               file_name=f"{eng.id}-report.html", mime="text/html",
+                               use_container_width=True)
+            d3.download_button("⬇ Markdown", st.session_state["report_md"],
+                               file_name=f"{eng.id}-report.md", mime="text/markdown",
+                               use_container_width=True)
             if has_geolocated_ips(graph):
-                st.download_button("⬇ map.kml (geolocated IPs)", build_kml(graph),
+                d4.download_button("⬇ Map (KML)", build_kml(graph),
                                    file_name=f"{eng.id}-map.kml",
-                                   mime="application/vnd.google-earth.kml+xml")
+                                   mime="application/vnd.google-earth.kml+xml",
+                                   use_container_width=True)
             st.markdown(st.session_state["report_md"])
 
     # --- audit log ---

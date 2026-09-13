@@ -2,6 +2,16 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.54.0] — 2026-09-13
+
+Download the report as PDF / HTML.
+
+### Added
+- The report section now offers **PDF**, **HTML**, and **Markdown** download buttons (plus KML
+  when there are geolocated IPs). "Generate report" builds all formats at once — the AI
+  narrative, then the styled HTML and PDF — so the polished report is one click to save. PDF is
+  offered only when WeasyPrint is available.
+
 ## [0.53.0] — 2026-09-13
 
 Stricter name matching (less first-name noise).
