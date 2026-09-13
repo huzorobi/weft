@@ -2,6 +2,17 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.35.0] — 2026-09-13
+
+Package maintainer identity + Stack Overflow.
+
+### Added
+- `package_metadata` (PACKAGE): reads a package's registry metadata (npm and PyPI) and emits
+  the author's name and email, maintainer handles, and homepage/repository links — turning a
+  package into identity pivots. Repository URLs are cleaned of `git+` and `.git`. Keyless, passive.
+- `stackexchange` (USERNAME / NAME / PERSON): Stack Overflow profiles matching a username or
+  name, with reputation as a salience signal. Keyless (shared daily quota), passive.
+
 ## [0.34.0] — 2026-09-13
 
 POST support + package-vulnerability chain + abuse.ch.
