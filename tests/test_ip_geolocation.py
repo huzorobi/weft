@@ -11,9 +11,9 @@ from weft.reporting.kml import build_kml, has_geolocated_ips
 
 from _fakes import FakeHttp
 
-_GEO = {"status": "success", "country": "United States", "countryCode": "US",
-        "regionName": "Virginia", "city": "Ashburn", "lat": 39.03, "lon": -77.5,
-        "isp": "Google LLC", "org": "Google Public DNS", "as": "AS15169 Google LLC", "query": "8.8.8.8"}
+_GEO = {"success": True, "country": "United States", "country_code": "US",
+        "region": "Virginia", "city": "Ashburn", "latitude": 39.03, "longitude": -77.5,
+        "connection": {"isp": "Google LLC", "org": "Google Public DNS", "asn": 15169}}
 
 
 def _ctx(http):
@@ -25,7 +25,7 @@ def _ip(v="8.8.8.8"):
 
 
 def test_ip_geolocation_enriches_and_emits_org():
-    out = asyncio.run(IpGeolocation().run(_ip(), _ctx(FakeHttp({"ip-api.com": (200, _GEO)}))))
+    out = asyncio.run(IpGeolocation().run(_ip(), _ctx(FakeHttp({"ipwho.is": (200, _GEO)}))))
     ip = [e for e in out if e.type is EntityType.IP][0]
     assert ip.key() == "ip:8.8.8.8"           # same node, enriched
     assert ip.metadata["lat"] == 39.03 and ip.metadata["lon"] == -77.5
@@ -35,7 +35,7 @@ def test_ip_geolocation_enriches_and_emits_org():
 
 
 def test_ip_geolocation_failure_returns_empty():
-    out = asyncio.run(IpGeolocation().run(_ip(), _ctx(FakeHttp({"ip-api.com": (200, {"status": "fail"})}))))
+    out = asyncio.run(IpGeolocation().run(_ip(), _ctx(FakeHttp({"ipwho.is": (200, {"success": False})}))))
     assert out == []
 
 

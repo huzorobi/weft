@@ -2,6 +2,15 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.20.0] — 2026-09-13
+
+Commercially-clean IP geolocation.
+
+### Changed
+- `ip_geolocation` now uses ipwho.is (free, keyless, commercial use permitted) instead of
+  ip-api.com, whose free tier is non-commercial only. Same enrichment (country, city,
+  coordinates, ISP, ASN) and it works with no key or setup.
+
 ## [0.19.0] — 2026-09-13
 
 Email breach exposure, and opt-in dark-web search over Tor.
