@@ -17,7 +17,7 @@ INTERNETDB = "https://internetdb.shodan.io/"
 class ShodanInternetDB(Module):
     name = "shodan_internetdb"
     accepts = [EntityType.IP]
-    produces = [EntityType.IP, EntityType.DOMAIN]
+    produces = [EntityType.IP, EntityType.DOMAIN, EntityType.CVE]
     access = Access.FREE_API
     reliability = 0.8
     timeout_s = 20
@@ -47,4 +47,10 @@ class ShodanInternetDB(Module):
                 out.append(Entity.make(EntityType.DOMAIN, h, source_module=self.name,
                                        confidence=self.reliability, seed_id=entity.seed_id,
                                        metadata={"discovered_via": "Shodan InternetDB (reverse DNS)"}))
+        for cve in data.get("vulns", []) or []:
+            c = str(cve).strip().upper()
+            if c.startswith("CVE-"):
+                out.append(Entity.make(EntityType.CVE, c, source_module=self.name,
+                                       confidence=self.reliability, seed_id=entity.seed_id,
+                                       metadata={"on_ip": entity.value, "discovered_via": "Shodan InternetDB"}))
         return out

@@ -26,7 +26,7 @@ from weft.ui.runner import execute_run
 SEED_TYPES = [
     EntityType.DOMAIN, EntityType.PHONE, EntityType.EMAIL,
     EntityType.USERNAME, EntityType.NAME, EntityType.PERSON,
-    EntityType.CRYPTO_ADDRESS,
+    EntityType.CRYPTO_ADDRESS, EntityType.CVE,
 ]
 
 

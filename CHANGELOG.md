@@ -2,6 +2,21 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.30.0] — 2026-09-13
+
+PGP identity + CVE context.
+
+### Added
+- New `EntityType.CVE` (seedable). `shodan_internetdb` now emits the CVEs it finds on an IP as
+  CVE entities, so they can be enriched downstream.
+- `pgp_keyservers` (EMAIL): looks an email up on the public PGP keyservers (keyserver.ubuntu.com,
+  keys.openpgp.org, ProtonMail) and returns the real name and the other emails on the same key —
+  a strong identity link — plus a Proton-account signal. Robust to malformed "email <Name>" uids.
+  Keyless, passive.
+- `cve_context` (CVE): enriches a CVE with CISA KEV (known-exploited, date added, ransomware use)
+  and OSV.dev (summary, severity, aliases). The KEV catalogue is cached once per run. Keyless,
+  passive.
+
 ## [0.29.0] — 2026-09-13
 
 News, court records, and decentralised social.
