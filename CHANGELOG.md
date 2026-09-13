@@ -2,6 +2,19 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.39.0] — 2026-09-13
+
+HTML + PDF report output.
+
+### Added
+- `reporting.html.build_html_report`: renders the Markdown report as a self-contained, styled
+  HTML document (inline CSS, no external assets) — browser-ready and print-friendly, with the
+  Risk & exposure section visually railed.
+- `reporting.pdf`: renders that HTML to PDF via WeasyPrint (`write_pdf` / `build_pdf_from_markdown`).
+  WeasyPrint is an optional dependency, imported lazily; `pdf_available()` reports whether it can
+  run and the builder raises an actionable error if not.
+- `report` optional-dependencies extra (markdown, weasyprint).
+
 ## [0.38.0] — 2026-09-13
 
 Risk & exposure section in the report.

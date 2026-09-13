@@ -26,6 +26,7 @@ dependencies = [
 
 [project.optional-dependencies]
 ui = ["streamlit>=1.36", "pyvis>=0.3.2"]
+report = ["markdown>=3.5", "weasyprint>=60"]
 modules = ["holehe", "maigret", "sherlock-project", "theHarvester"]
 dev = ["pytest>=8.2", "pytest-asyncio>=0.23", "ruff>=0.5", "mypy>=1.10"]
 
