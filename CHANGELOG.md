@@ -2,6 +2,16 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.21.0] — 2026-09-13
+
+Email spoofability and Common Crawl.
+
+### Added
+- `email_auth`: SPF/DMARC spoofability verdict for a domain (offline DNS) — protected,
+  partial, or spoofable, with the reasons. High-signal, passive, keyless.
+- `commoncrawl`: historical URLs and subdomains from the Common Crawl index (free, keyless)
+  — a second historical corpus alongside the Wayback Machine.
+
 ## [0.20.0] — 2026-09-13
 
 Commercially-clean IP geolocation.
