@@ -2,6 +2,15 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.23.0] — 2026-09-13
+
+Address geocoding and addresses on the map.
+
+### Added
+- `nominatim`: geocodes an address (from Companies House, GLEIF, or WHOIS) to coordinates
+  via OpenStreetMap Nominatim (free, keyless, commercial use permitted under the usage
+  policy). The KML map now plots geocoded addresses alongside geolocated IPs.
+
 ## [0.22.0] — 2026-09-13
 
 Timeline.

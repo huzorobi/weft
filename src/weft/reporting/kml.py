@@ -14,15 +14,15 @@ from weft.core.graphstore import InMemoryGraph
 def build_kml(graph: InMemoryGraph, *, title: str = "Weft — geolocated IPs") -> str:
     placemarks: list[str] = []
     for e in graph.nodes.values():
-        if e.type is not EntityType.IP:
+        if e.type not in (EntityType.IP, EntityType.ADDRESS):
             continue
         md = e.metadata if isinstance(e.metadata, dict) else {}
         lat, lon = md.get("lat"), md.get("lon")
         if lat is None or lon is None:
             continue
         where = ", ".join(x for x in (md.get("city"), md.get("region"), md.get("country")) if x)
-        owner = " | ".join(x for x in (md.get("isp"), md.get("org"), md.get("asn")) if x)
-        desc = " | ".join(x for x in (where, owner) if x)
+        owner = " | ".join(x for x in (md.get("isp"), md.get("org"), md.get("asn"), md.get("geocoded_name")) if x)
+        desc = " | ".join(x for x in (e.type.value, where, owner) if x)
         placemarks.append(
             "    <Placemark>\n"
             f"      <name>{escape(e.value)}</name>\n"
@@ -44,7 +44,7 @@ def build_kml(graph: InMemoryGraph, *, title: str = "Weft — geolocated IPs") -
 
 def has_geolocated_ips(graph: InMemoryGraph) -> bool:
     return any(
-        e.type is EntityType.IP and isinstance(e.metadata, dict)
+        e.type in (EntityType.IP, EntityType.ADDRESS) and isinstance(e.metadata, dict)
         and e.metadata.get("lat") is not None and e.metadata.get("lon") is not None
         for e in graph.nodes.values()
     )
