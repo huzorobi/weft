@@ -2,6 +2,17 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.18.0] — 2026-09-13
+
+Keyless identity sources: GLEIF and Wikidata.
+
+### Added
+- `gleif`: global legal-entity lookup via the GLEIF LEI API (free, keyless) — matching
+  organisations with their LEI and registered address, worldwide (complements the UK-only
+  Companies House).
+- `wikidata`: structured identity via Wikidata (free, keyless) — anchors a notable person or
+  organisation to its entity, official website, and external identifiers (e.g. GitHub).
+
 ## [0.17.0] — 2026-09-13
 
 Infrastructure-pivot sources: urlscan.io and AlienVault OTX.
