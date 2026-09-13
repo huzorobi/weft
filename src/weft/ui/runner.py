@@ -59,7 +59,7 @@ def execute_run(
     override_reason: str | None = None,
 ) -> UiRunOutput:
     """Run one expansion. Refuses when the legal statement was not accepted."""
-    graph = InMemoryGraph()
+    graph = InMemoryGraph()          # always the render source
     store = audit_store or InMemoryAuditStore()
     audit = AuditLogger(store)
 
@@ -79,15 +79,20 @@ def execute_run(
     seed = Entity.make(seed_type, seed_value, source_module="seed", confidence=1.0, seed_id=str(uuid.uuid4()))
 
     async def _go() -> RunResult:
+        from weft.storage.graph import TeeGraph, open_neo4j
+        settings = load_settings()
         http = None
         needs_http = any(getattr(m, "access", None) and m.access.value in ("free_api", "self_hosted") for m in mods)
         if needs_http:
             from weft.core.http import HttpxClient
             http = HttpxClient()
+        # Persist to Neo4j when reachable; always render from the in-memory graph.
+        persist = open_neo4j(settings, engagement.id)
+        write_graph = TeeGraph(graph, persist) if persist else graph
         orch = Orchestrator(
-            modules=mods, graph=graph, audit=audit,
+            modules=mods, graph=write_graph, audit=audit,
             rate_limiter=TokenBucketRateLimiter(rate=5, capacity=5),
-            secrets=default_secrets(load_settings().secrets_file), http=http,
+            secrets=default_secrets(settings.secrets_file), http=http,
             gate=ScopeGate(), depth_cap=depth_cap,
         )
         try:
@@ -96,6 +101,8 @@ def execute_run(
         finally:
             if http is not None:
                 await http.aclose()
+            if persist is not None:
+                persist.close()
 
     result = asyncio.run(_go())
     if result.seeds_refused and not result.seeds_allowed:

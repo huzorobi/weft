@@ -2,6 +2,19 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.10.0] — 2026-09-13
+
+Neo4j persistence, engagement-isolated.
+
+### Added
+- The graph now persists to Neo4j, scoped per engagement: nodes are keyed by
+  `(engagement, key)`, so two engagements never share a node — one client's data stays
+  out of another's. The run renders from memory and persists to Neo4j in one pass (a tee);
+  Neo4j being unreachable falls back to in-memory only.
+- `Neo4jGraph.load` reads an engagement's graph back for reporting; `purge_engagement`
+  deletes it, wired into the lifecycle purge.
+- CLI: `weft report <id> [--model M] [--out F]` builds the report from the persisted graph.
+
 ## [0.9.0] — 2026-09-13
 
 Phase 6 — hardening.
