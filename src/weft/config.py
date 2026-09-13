@@ -40,6 +40,10 @@ try:
         # Orchestrator defaults.
         depth_default: int = 2
 
+        # Local reasoner (optional, local-only). Small model for an 8GB GPU.
+        ollama_url: str = "http://localhost:11434"
+        reasoner_model: str = "llama3.2:3b"
+
     def load_settings() -> "Settings":
         return Settings()
 
@@ -56,6 +60,8 @@ except Exception:  # pragma: no cover - fallback when pydantic-settings is absen
         opencorporates_api_key: str | None = os.getenv("OPENCORPORATES_API_KEY")
         hibp_api_key: str | None = os.getenv("HIBP_API_KEY")
         depth_default: int = int(os.getenv("DEPTH_DEFAULT", "2"))
+        ollama_url: str = os.getenv("OLLAMA_URL", "http://localhost:11434")
+        reasoner_model: str = os.getenv("REASONER_MODEL", "llama3.2:3b")
 
     def load_settings() -> "Settings":
         return Settings()

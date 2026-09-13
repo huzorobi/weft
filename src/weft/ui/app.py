@@ -17,6 +17,8 @@ import streamlit.components.v1 as components
 from weft.compliance.engagement import LEGAL_STATEMENT, ControllerRole, Engagement
 from weft.config import load_settings
 from weft.core.entity import EntityType
+from weft.core.reasoner import OllamaReasoner
+from weft.reporting import build_report
 from weft.storage.meta import EngagementRepository, MetaStore, SqlAuditStore
 from weft.ui.graphview import build_vis_payload, render_html
 from weft.ui.runner import execute_run
@@ -125,6 +127,28 @@ def main() -> None:
                 node = graph.nodes[chosen]
                 st.json({"type": node.type.value, "value": node.value,
                          "confidence": node.confidence, "metadata": node.metadata})
+
+    # --- report (deterministic + optional local-AI narrative) ---
+    st.divider()
+    st.subheader("Report")
+    graph = st.session_state.get("graph")
+    if graph and graph.nodes:
+        settings = load_settings()
+        col_a, col_b = st.columns([3, 1])
+        model = col_a.text_input("Local model for the narrative (Ollama, optional)",
+                                 value=settings.reasoner_model,
+                                 help="Leave as-is for a small local model, or clear to skip AI narration.")
+        if col_b.button("Generate report"):
+            reasoner = OllamaReasoner(model, base_url=settings.ollama_url) if model.strip() else None
+            md = build_report(selected, graph, reasoner=reasoner,
+                              seeds=[seed_value] if seed_value else None)
+            st.session_state["report_md"] = md
+        if "report_md" in st.session_state:
+            st.download_button("Download report.md", st.session_state["report_md"],
+                               file_name=f"{selected.id}-report.md", mime="text/markdown")
+            st.markdown(st.session_state["report_md"])
+    else:
+        st.caption("Run an expansion first, then generate a report.")
 
     # --- audit viewer ---
     st.divider()

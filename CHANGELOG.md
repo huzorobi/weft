@@ -2,6 +2,23 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.6.0] — 2026-09-13
+
+Report narration with a local AI, and social-presence grouping.
+
+### Added
+- `core.reasoner`: a local-only reasoning abstraction (`Reasoner` protocol, `NullReasoner`
+  fallback, `OllamaReasoner`). The model narrates the graph; it never produces findings,
+  and nothing leaves the estate.
+- `reporting.build_report`: per-engagement Markdown report — header with the compliance
+  artefacts, summary, social presence grouped by platform, full entity inventory with
+  sources and confidence, and a coverage note. When a local model is available it adds a
+  grounded prose narrative, discarded if it names any email/URL not in the graph.
+- `reporting.classify_platform`: label a profile URL (Facebook, X, LinkedIn, GitHub,
+  Instagram, Reddit, …) from open enumeration, not platform scraping.
+- UI: a Report section that generates and downloads the report, with an optional local model.
+- Config: `OLLAMA_URL`, `REASONER_MODEL` (small model, 8GB-GPU friendly).
+
 ## [0.5.0] — 2026-09-13
 
 Phase 4 — search + historical.

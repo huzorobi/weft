@@ -1,0 +1,147 @@
+"""Build a per-engagement Markdown report from the graph, with a grounded AI narrative.
+
+Deterministic sections (engagement header, entity inventory with sources and
+confidence, social presence grouped by platform, coverage note) are always produced.
+When a local reasoner is available, a short prose narrative is added — but only after a
+grounding check: any email, domain, or URL the narrative mentions must exist in the
+graph, or the narrative is discarded. The model summarises evidence; it never adds to
+it. British English; nothing is overstated.
+"""
+from __future__ import annotations
+
+import re
+from datetime import datetime, timezone
+
+from weft.core.entity import EntityType
+from weft.core.graphstore import InMemoryGraph
+from weft.core.reasoner import NullReasoner, Reasoner
+from weft.reporting.platforms import classify_platform
+
+_EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
+_URL_RE = re.compile(r"https?://[^\s)\]]+")
+
+_SYSTEM = (
+    "You are an OSINT analyst writing a concise, factual reconnaissance summary for an "
+    "authorised engagement. Use ONLY the facts provided. Never invent names, accounts, "
+    "links, or conclusions not present in the facts. Do not speculate about the person. "
+    "British English. Neutral, professional, three short paragraphs at most."
+)
+
+
+def build_report(engagement, graph: InMemoryGraph, *, reasoner: Reasoner | None = None,
+                 seeds: list[str] | None = None, now: datetime | None = None) -> str:
+    now = now or datetime.now(timezone.utc)
+    reasoner = reasoner or NullReasoner()
+    nodes = list(graph.nodes.values())
+    by_type: dict[str, list] = {}
+    for e in nodes:
+        by_type.setdefault(e.type.value, []).append(e)
+
+    lines: list[str] = []
+    a = lines.append
+
+    # ---- header ----
+    a(f"# OSINT reconnaissance report — {engagement.client}")
+    a("")
+    a(f"- **Engagement:** {engagement.id}")
+    a(f"- **Signed scope reference:** {engagement.scope_ref}")
+    a(f"- **Authorisation window:** {engagement.start_date} to {engagement.end_date}")
+    a(f"- **Lawful basis:** {engagement.lawful_basis}")
+    a(f"- **Controller/processor role:** {getattr(engagement.controller_role, 'value', engagement.controller_role)}")
+    if engagement.dpia_ref:
+        a(f"- **DPIA reference:** {engagement.dpia_ref}")
+    if engagement.lia_ref:
+        a(f"- **LIA reference:** {engagement.lia_ref}")
+    if seeds:
+        a(f"- **Seeds:** {', '.join(seeds)}")
+    a(f"- **Generated:** {now.isoformat(timespec='seconds')}")
+    a("")
+
+    # ---- summary ----
+    a("## Summary")
+    a("")
+    a(f"- {len(nodes)} entities across {len(by_type)} types, {len(graph.edges)} relationships.")
+    counts = ", ".join(f"{t}: {len(v)}" for t, v in sorted(by_type.items()))
+    if counts:
+        a(f"- Breakdown: {counts}.")
+    a("")
+
+    # ---- AI narrative (grounded, optional) ----
+    narrative = _narrate(reasoner, engagement, by_type, seeds)
+    a("## Narrative")
+    a("")
+    if narrative:
+        a(f"*AI-assisted summary (local model {getattr(reasoner, 'name', 'llm')}); verify against the evidence below.*")
+        a("")
+        a(narrative)
+    else:
+        a("_No local model available, or the generated narrative failed the grounding check; "
+          "the evidence below is authoritative._")
+    a("")
+
+    # ---- social presence ----
+    social: dict[str, list] = {}
+    for e in nodes:
+        if e.type in (EntityType.SOCIAL_PROFILE, EntityType.URL, EntityType.USERNAME):
+            platform = classify_platform(e.value) or (e.metadata.get("service") if isinstance(e.metadata, dict) else None)
+            if platform:
+                social.setdefault(str(platform), []).append(e)
+    if social:
+        a("## Social presence")
+        a("")
+        a("Profiles surfaced through open enumeration (maigret, sherlock, holehe, Gravatar, web search) — "
+          "public pages only, not platform scraping.")
+        a("")
+        for platform in sorted(social):
+            for e in social[platform]:
+                a(f"- **{platform}:** {e.value}  _(confidence {e.confidence:.2f})_")
+        a("")
+
+    # ---- full entity inventory ----
+    a("## Entities")
+    a("")
+    for t in sorted(by_type):
+        a(f"### {t}")
+        for e in sorted(by_type[t], key=lambda x: -x.confidence):
+            srcs = ", ".join(e.metadata.get("sources", [])) if isinstance(e.metadata, dict) else ""
+            a(f"- `{e.value}` — confidence {e.confidence:.2f}" + (f", sources: {srcs}" if srcs else ""))
+        a("")
+
+    # ---- coverage / honesty ----
+    a("## Coverage")
+    a("")
+    a("- Findings are aggregated from free, public open sources; each entity records the source that "
+      "produced it and a confidence weighted by source reliability and corroboration.")
+    a("- A low confidence indicates a single weak signal (for example one search hit); prefer entities "
+      "corroborated by two or more independent sources.")
+    a("- Absence of a result is not proof of absence: a source that was unreachable or disabled during the "
+      "run was not tested.")
+    a("")
+    return "\n".join(lines)
+
+
+def _narrate(reasoner: Reasoner, engagement, by_type: dict, seeds) -> str:
+    if not reasoner.available:
+        return ""
+    facts = [f"Engagement client: {engagement.client}."]
+    if seeds:
+        facts.append(f"Seed(s): {', '.join(seeds)}.")
+    for t, ents in sorted(by_type.items()):
+        vals = ", ".join(e.value for e in ents[:15])
+        facts.append(f"{t} ({len(ents)}): {vals}")
+    prompt = ("Write a short factual reconnaissance summary from these facts. Do not add anything not "
+              "listed. Facts:\n" + "\n".join(facts))
+    narrative = reasoner.narrate(system=_SYSTEM, prompt=prompt)
+    if not narrative or not _is_grounded(narrative, by_type):
+        return ""
+    return narrative
+
+
+def _is_grounded(narrative: str, by_type: dict) -> bool:
+    """Every email/URL the narrative names must exist in the graph, else discard it."""
+    known = {e.value.lower() for ents in by_type.values() for e in ents}
+    for token in _EMAIL_RE.findall(narrative) + _URL_RE.findall(narrative):
+        tok = token.rstrip(".,);").lower()
+        if tok not in known and not any(tok in k or k in tok for k in known):
+            return False
+    return True
