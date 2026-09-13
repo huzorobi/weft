@@ -147,3 +147,19 @@ def test_report_no_diff_section_without_previous_graph():
     from weft.reporting.build import build_report, NullReasoner
     md = build_report(_eng(), _graph(), reasoner=NullReasoner(), seeds=["x"])
     assert "## Changes since last run" not in md
+
+
+def test_report_priority_alerts_and_admiralty_grades():
+    from weft.reporting.build import build_report, NullReasoner
+    g = InMemoryGraph()
+    g.upsert_entity(Entity.make(EntityType.CVE, "CVE-2021-44228", source_module="cve_context",
+                                confidence=0.9, seed_id="s",
+                                metadata={"known_exploited": True, "kev_name": "Log4Shell"}))
+    g.upsert_entity(Entity.make(EntityType.EMAIL, "rob@x.com", source_module="m", confidence=0.9, seed_id="s"))
+    md = build_report(_eng(), g, reasoner=NullReasoner(), seeds=["x"])
+    assert "## Priority alerts" in md
+    assert "[CRITICAL]" in md and "Known-exploited vulnerability" in md
+    # Admiralty grade appears on entity lines (e.g. A3 for a single-source high-confidence email)
+    assert "Admiralty grade" in md
+    import re
+    assert re.search(r"`rob@x\.com` — \*\*[A-F][1-6]\*\*", md)

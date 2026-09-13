@@ -2,6 +2,20 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.43.0] — 2026-09-13
+
+Priority alerts + Admiralty grading.
+
+### Added
+- `core.alerts.raise_alerts`: a ranked triage list of the items to look at first — risk
+  findings escalated (sanctions and known-exploited CVEs as critical, malicious infrastructure
+  as high), high-confidence identity clusters, and the top graph pivot. Pure; reads only what
+  the correlation, resolution, and analytics passes produced. Rendered as a "Priority alerts"
+  section at the top of the report.
+- `core.admiralty.grade_entity`: the NATO Admiralty code for each entity — source reliability
+  (A–F) from its confidence and information credibility (1–6) from how many independent sources
+  corroborate it. Shown against every entity in the report inventory.
+
 ## [0.42.0] — 2026-09-13
 
 STIX 2.1 + MISP export.

@@ -95,6 +95,18 @@ def build_report(engagement, graph: InMemoryGraph, *, reasoner: Reasoner | None 
         a(f"- Breakdown: {counts}.")
     a("")
 
+    # ---- priority alerts (triage banner) ----
+    from weft.core.alerts import raise_alerts
+    alerts = raise_alerts(findings, resolution, analytics, graph=graph)
+    if alerts:
+        a("## Priority alerts")
+        a("")
+        a("The items to look at first — escalated from the risk, identity, and graph analyses below.")
+        a("")
+        for al in alerts:
+            a(f"- **[{al.level.upper()}]** {al.title} — {al.detail}")
+        a("")
+
     # ---- changes since last run (differential monitoring) ----
     if previous_graph is not None:
         from weft.core.differential import diff_graphs, render_diff
@@ -216,13 +228,17 @@ def build_report(engagement, graph: InMemoryGraph, *, reasoner: Reasoner | None 
         a("")
 
     # ---- full entity inventory ----
+    from weft.core.admiralty import grade_entity
     a("## Entities")
+    a("")
+    a("_Each entity carries its Admiralty grade (source reliability A–F, information credibility 1–6)._")
     a("")
     for t in sorted(by_type):
         a(f"### {t}")
         for e in sorted(by_type[t], key=lambda x: -x.confidence):
             srcs = ", ".join(e.metadata.get("sources", [])) if isinstance(e.metadata, dict) else ""
-            a(f"- `{e.value}` — confidence {e.confidence:.2f}" + (f", sources: {srcs}" if srcs else ""))
+            grade = grade_entity(e).code
+            a(f"- `{e.value}` — **{grade}**, confidence {e.confidence:.2f}" + (f", sources: {srcs}" if srcs else ""))
         a("")
 
     # ---- coverage / honesty ----
