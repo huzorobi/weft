@@ -2,6 +2,20 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.4.0] — 2026-09-13
+
+Phase 3 — account enumeration.
+
+### Added
+- Email modules: `gravatar` (profile, linked accounts, URLs from an email hash),
+  `github_email` (accounts via commit search; free token), `holehe` (which sites have
+  an account; external tool, ToS-flagged).
+- Username modules: `github_user` (public profile), `maigret` and `sherlock`
+  (social-profile discovery; external tools, ToS-flagged).
+- Domain module: `github_domain` (public code referencing the domain; free token).
+- Shared GitHub auth helper. External-tool modules self-disable when their binary is
+  absent; their parsers are factored out and unit-tested.
+
 ## [0.3.0] — 2026-09-13
 
 Phase 2 — graph view.
