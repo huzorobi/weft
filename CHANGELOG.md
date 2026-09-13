@@ -2,6 +2,16 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.17.0] — 2026-09-13
+
+Infrastructure-pivot sources: urlscan.io and AlienVault OTX.
+
+### Added
+- `urlscan`: historical scans for a domain — related domains, scanned URLs, and IPs (free
+  key `URLSCAN_API_KEY`; self-disables without it).
+- `otx`: AlienVault OTX passive DNS for a domain or IP — resolved hostnames and their IPs
+  (free key `OTX_API_KEY`; self-disables without it).
+
 ## [0.16.0] — 2026-09-13
 
 Graph analytics — key pivots and communities.
