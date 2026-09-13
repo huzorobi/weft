@@ -2,6 +2,20 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.8.0] — 2026-09-13
+
+Phase 5 — lifecycle: purge and retention.
+
+### Added
+- `lifecycle.purge_engagement`: closes out an engagement — deletes run records and
+  exported files, clears the graph, and **redacts** the personal identifier inside the
+  audit log while keeping who ran what, when, and against which engagement. Redaction is
+  the sanctioned lawful-erasure exception to append-only, and the purge is itself recorded
+  as an audit event.
+- `lifecycle.expired_engagements` / `flag_expired`: the retention job that surfaces and
+  flags engagements past their end date.
+- CLI: `weft retention [--flag]` and `weft purge <id> --yes` (refuses without `--yes`).
+
 ## [0.7.0] — 2026-09-13
 
 Maximum-collection default and AI identity assessment.

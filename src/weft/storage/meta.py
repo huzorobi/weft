@@ -166,3 +166,11 @@ class EngagementRepository:
             verified_domains=dict(row.verified_domains or {}),
             status=row.status,
         )
+
+    def set_status(self, engagement_id: str, status: str) -> None:
+        with self._store.session() as s:
+            row = s.get(EngagementRow, engagement_id)
+            if row:
+                row.status = status
+                s.add(row)
+                s.commit()
