@@ -2,6 +2,25 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.33.0] — 2026-09-13
+
+Free-key provider block + the keyed building block.
+
+### Added
+- `core.keyed.KeyedApiModule`: a reusable building block for free-key sources. It declares the
+  key requirement and provides the key lookup and header/param helpers; the inherited health
+  check reports "missing free key; module disables itself" so a keyed source never looks like a
+  clean "no results". Each keyed module self-disables without its key.
+- `abuseipdb` (IP): crowd-sourced IP abuse confidence, reports, and network (AbuseIPDB).
+- `hunterio` (DOMAIN): corporate email addresses and the org email pattern (Hunter.io).
+- `securitytrails` (DOMAIN): historical subdomains, including ones no longer live (SecurityTrails).
+- `etherscan` (CRYPTO_ADDRESS): Ethereum balance and first transaction — the EVM counterpart to
+  the keyless Bitcoin explorer; only fires on Ethereum-shaped addresses (Etherscan V2).
+- `.env.example`: the new key names, each marked free-tier.
+
+Endpoints were confirmed live to exist and to gate on a key (HTTP 401 without one); parse logic
+is pinned by tests and will be live-verified when keys are supplied.
+
 ## [0.32.0] — 2026-09-13
 
 Developer footprint pack.
