@@ -13,6 +13,33 @@ Owner: HuzoSecurity Ltd. Purpose: authorised penetration-testing reconnaissance.
 > provided "AS IS", without warranty, and the authors accept no liability for misuse. See
 > [DISCLAIMER.md](DISCLAIMER.md) for the full terms.
 
+## Features
+
+- **One seed, a whole graph** — a domain, email, username, name, phone, crypto address, or CVE
+  expands across **60 free-source modules** into a linked graph of **17 entity types**.
+- **Passive and compliance-gated** — reads public sources only; the operator accepts the terms
+  once (UK GDPR/DPA, EU GDPR, US CFAA), the scope gate is enforced in code, and every call is
+  logged to an append-only audit.
+- **Deterministic correlation + risk findings** — patterns across the graph, and high-stakes
+  signals surfaced: sanctions matches, known-exploited CVEs, malicious infrastructure.
+- **Identity resolution** — clusters the entities that are the same person on shared handles,
+  matching names, and a shared PGP key; confidence reflects independent corroboration.
+- **Graph analytics** — betweenness centrality finds the best pivot; community detection groups
+  connected clusters.
+- **Local AI, grounded** — an optional local model writes the report narrative and an identity
+  assessment ("is it the same person?"), and an autonomous hunter picks pivots from a validated
+  action catalogue. It reasons about the evidence; it never invents a finding.
+- **Priority alerts + Admiralty grading** — a ranked triage banner and a NATO Admiralty code
+  (reliability A–F, credibility 1–6) on every entity.
+- **Reports & export** — Markdown, styled HTML, and PDF; STIX 2.1 and MISP for OpenCTI/MISP; an
+  interactive graph; and a KML map of geolocated points.
+- **Monitoring** — a persisted graph per engagement means a re-run diffs against the last: what
+  is new, gone, or gained confidence.
+- **One-click cold start** — the desktop icon brings up the stack (Neo4j, SearXNG, Tor) and the
+  local AI, then opens the UI in a frameless app window with live service-status dots.
+- **Free-key friendly** — keyed providers self-disable (loudly) until you add their free key; the
+  keyless core runs out of the box.
+
 ## Principles
 
 - **Free sources only.** No paid APIs, ever. Free-tier keys that cost nothing are fine, and
