@@ -2,6 +2,27 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.27.0] — 2026-09-13
+
+Infrastructure-pivot pack.
+
+### Added
+- `arin_rdap` (IP): North-American IP registration via ARIN RDAP — registrant organisation,
+  network name, CIDR, allocation type, and abuse/network contact emails. Complements the
+  RIPE-only `ripestat`. Keyless, passive.
+- `hackertarget` (IP / DOMAIN): two pivots from HackerTarget's keyless API — reverse IP
+  (an IP to the other domains co-hosted on it) and host search (a domain to its subdomains
+  and their IPs). Passive (HackerTarget does the lookup; Weft reads the result). Handles the
+  free-tier rate-limit body gracefully.
+
+### Deferred (not shipped unverified)
+- BGPView (keyless ASN/prefix API) was unreachable at build time (host did not resolve /
+  connect); left out rather than shipped against a dead endpoint. ASN is partly covered by
+  `ripestat` and now ARIN.
+- spyonweb reverse-analytics needs a key (and was unreachable); favicon-hash pivoting needs
+  either an active favicon fetch from the target or a Shodan key — both out of the keyless,
+  passive-only scope for now.
+
 ## [0.26.0] — 2026-09-13
 
 Sanctions & ownership pack.
