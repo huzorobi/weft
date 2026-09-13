@@ -2,6 +2,16 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.53.0] — 2026-09-13
+
+Stricter name matching (less first-name noise).
+
+### Fixed
+- For a **name/person** seed, `apple_itunes` and `bluesky` now require ALL of the name's tokens
+  to match a candidate, not just one — so a shared first name alone (e.g. every "Robert" for a
+  "Robert Huzo" search) no longer produces a false candidate. Company/organisation and plain
+  username seeds keep the looser single-token behaviour.
+
 ## [0.52.0] — 2026-09-13
 
 Always-visible service controls.

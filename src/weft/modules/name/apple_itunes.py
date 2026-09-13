@@ -38,22 +38,28 @@ class AppleItunes(Module):
         return _parse(data, entity, self.name, self.reliability)
 
 
-def _relevant(seller: str, artist: str, query: str) -> bool:
-    """Keep only results whose seller/developer plausibly matches the query — the term search
-    returns loose matches (searching one brand can surface a rival), so filter by seller."""
+def _relevant(seller: str, artist: str, query: str, *, strict: bool) -> bool:
+    """Keep only results whose seller/developer matches the query — the term search returns loose
+    matches (searching one brand surfaces a rival). For a person name, ``strict`` requires ALL
+    name tokens (so a shared first name alone is not a match); for a company, any token will do."""
     q = query.lower()
-    tokens = [t for t in q.replace(",", " ").split() if len(t) >= 4]
+    tokens = [t for t in q.replace(",", " ").split() if len(t) >= 3]
     hay = f"{seller} {artist}".lower()
-    return q in hay or any(t in hay for t in tokens)
+    if q in hay:
+        return True
+    if strict:
+        return bool(tokens) and all(t in hay for t in tokens)
+    return any(t in hay for t in tokens)
 
 
 def _parse(data: dict, seed: Entity, source: str, reliability: float) -> list[Entity]:
     out: list[Entity] = []
     seen_sellers: set[str] = set()
+    strict = seed.type in (EntityType.NAME, EntityType.PERSON)
     for app in data.get("results", [])[:MAX_APPS]:
         seller = app.get("sellerName") or app.get("artistName") or ""
         artist = app.get("artistName") or ""
-        if not _relevant(seller, artist, seed.value):
+        if not _relevant(seller, artist, seed.value, strict=strict):
             continue
         url = app.get("trackViewUrl")
         if url:

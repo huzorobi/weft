@@ -96,10 +96,15 @@ def test_bluesky_plain_username_searches_actors():
     assert not any("getProfile" in c for c in http.calls)
 
 
-def test_bluesky_name_seed_searches():
-    http = FakeHttp({"searchActors": (200, {"actors": [{"handle": "a.bsky.social", "did": "d"}]})})
+def test_bluesky_name_seed_keeps_full_name_drops_first_name_only():
+    http = FakeHttp({"searchActors": (200, {"actors": [
+        {"handle": "sperson.bsky.social", "did": "d1", "displayName": "Some Person"},   # full match
+        {"handle": "someoneelse.bsky.social", "did": "d2", "displayName": "Some Guy"},   # only "some"
+    ]})})
     out = asyncio.run(Bluesky().run(_e(EntityType.NAME, "Some Person"), _ctx(http)))
-    assert any(e.type is EntityType.SOCIAL_PROFILE for e in out)
+    socials = {e.value for e in out if e.type is EntityType.SOCIAL_PROFILE}
+    assert "https://bsky.app/profile/sperson.bsky.social" in socials
+    assert not any("someoneelse" in s for s in socials)   # shared first name alone is not a match
 
 
 def test_registry_discovers_news_court_social():

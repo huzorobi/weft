@@ -83,3 +83,19 @@ def test_registry_discovers_surface_footprint_pack():
     from weft.core import registry
     registry.discover()
     assert {"subdomain_center", "crossref", "apple_itunes"} <= set(registry.registered_classes())
+
+
+def test_itunes_person_seed_requires_all_name_tokens():
+    # a person search must not match on a shared first name alone (the "Robert Huzo" noise)
+    http = FakeHttp({"itunes.apple.com/search": (200, {"results": [
+        {"trackName": "EvalEdge", "sellerName": "Eight Bells Studio LLC", "artistName": "Robert Cherek",
+         "trackViewUrl": "https://apps.apple.com/app/id9"}]})})
+    out = asyncio.run(AppleItunes().run(_e(EntityType.NAME, "Robert Huzo"), _ctx(http)))
+    assert out == []   # "Robert" matches but "Huzo" does not -> dropped
+
+    # a full-name match is still kept
+    http2 = FakeHttp({"itunes.apple.com/search": (200, {"results": [
+        {"trackName": "App", "sellerName": "Robert Huzo Ltd", "artistName": "Robert Huzo",
+         "trackViewUrl": "https://apps.apple.com/app/id10"}]})})
+    out2 = asyncio.run(AppleItunes().run(_e(EntityType.NAME, "Robert Huzo"), _ctx(http2)))
+    assert any(e.type is EntityType.URL for e in out2)

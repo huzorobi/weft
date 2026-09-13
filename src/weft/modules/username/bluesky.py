@@ -43,8 +43,16 @@ class Bluesky(Module):
         status, data = await ctx.http.get_json(SEARCH_ACTORS, params={"q": entity.value, "limit": str(MAX_SEARCH)})
         if status != 200 or not isinstance(data, dict):
             return []
+        # For a person name, keep only actors matching ALL name tokens — the search returns any
+        # loose match (e.g. every "Robert"), which is noise for a full name.
+        strict = entity.type in (EntityType.NAME, EntityType.PERSON)
+        tokens = [t for t in entity.value.lower().split() if len(t) >= 3]
         out: list[Entity] = []
         for actor in (data.get("actors", []) or [])[:MAX_SEARCH]:
+            if strict and tokens:
+                hay = f"{actor.get('displayName', '')} {actor.get('handle', '')}".lower()
+                if not all(t in hay for t in tokens):
+                    continue
             out += _profile_entities(actor, entity, self.name, 0.5, exact=False)
         return out
 
