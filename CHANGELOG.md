@@ -2,6 +2,16 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.5.0] — 2026-09-13
+
+Phase 4 — search + historical.
+
+### Added
+- `search_footprint`: web footprint via a self-hosted SearXNG instance (phone/email/
+  name/username -> pages that mention the seed). Self-disables if SearXNG is unreachable.
+- `wayback`: historical URLs and old subdomains from the Wayback Machine CDX API.
+- `phoneinfoga`: phone OSINT footprint via the external tool, intrusive scanner off.
+
 ## [0.4.0] — 2026-09-13
 
 Phase 3 — account enumeration.
