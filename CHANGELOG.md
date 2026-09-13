@@ -2,6 +2,28 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.26.0] — 2026-09-13
+
+Sanctions & ownership pack.
+
+### Added
+- `sanctions_screen` (NAME / PERSON / ORGANISATION): screens against the OFAC SDN list (US
+  Treasury) and the UN consolidated list — both public-domain, keyless. Downloads and caches
+  each bulk list once per run, then matches locally on significant name tokens (particles and
+  company suffixes dropped; a lone common token cannot bridge two names). A hit is labelled a
+  *potential* match with its sanctioning programme, reference, and aliases, for an analyst to
+  confirm — never asserted as a verdict.
+- `companies_house_psc` (ORGANISATION with a Companies House number): UK beneficial ownership
+  from the Persons with Significant Control register — the people and legal entities that
+  ultimately own or control a company. Reuses the free Companies House key and self-disables
+  without it.
+
+### Deferred (not shipped unverified)
+- The trade.gov Consolidated Screening List (OFAC+EU+UN+UK in one query) needs a free
+  api.data.gov key — a future keyed module can supersede the two bulk lists.
+- OpenOwnership register and ICIJ Offshore Leaks expose no clean keyless passive API
+  (bot-protected / bulk-download only); left for a bulk-ingest or keyed path.
+
 ## [0.25.0] — 2026-09-13
 
 Crypto-address recon — a new entity type and pack.
