@@ -132,3 +132,18 @@ def test_no_risk_section_when_no_high_stakes_signals():
     from weft.reporting.build import build_report, NullReasoner
     md = build_report(_eng(), _graph(), reasoner=NullReasoner(), seeds=["x"])
     assert "## Risk & exposure" not in md   # omitted when clean, to avoid implying "checked and clear"
+
+
+def test_report_changes_since_last_run_section():
+    from weft.reporting.build import build_report, NullReasoner
+    prev = InMemoryGraph()
+    cur = _graph()   # has several entities not in prev
+    md = build_report(_eng(), cur, reasoner=NullReasoner(), seeds=["x"], previous_graph=prev)
+    assert "## Changes since last run" in md
+    assert "new" in md.lower()
+
+
+def test_report_no_diff_section_without_previous_graph():
+    from weft.reporting.build import build_report, NullReasoner
+    md = build_report(_eng(), _graph(), reasoner=NullReasoner(), seeds=["x"])
+    assert "## Changes since last run" not in md

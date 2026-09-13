@@ -48,7 +48,8 @@ _ASSESS_SYSTEM = (
 
 
 def build_report(engagement, graph: InMemoryGraph, *, reasoner: Reasoner | None = None,
-                 seeds: list[str] | None = None, now: datetime | None = None) -> str:
+                 seeds: list[str] | None = None, now: datetime | None = None,
+                 previous_graph: InMemoryGraph | None = None) -> str:
     now = now or datetime.now(timezone.utc)
     reasoner = reasoner or NullReasoner()
     nodes = list(graph.nodes.values())
@@ -93,6 +94,15 @@ def build_report(engagement, graph: InMemoryGraph, *, reasoner: Reasoner | None 
     if counts:
         a(f"- Breakdown: {counts}.")
     a("")
+
+    # ---- changes since last run (differential monitoring) ----
+    if previous_graph is not None:
+        from weft.core.differential import diff_graphs, render_diff
+        a("## Changes since last run")
+        a("")
+        for line in render_diff(diff_graphs(previous_graph, graph)):
+            a(line)
+        a("")
 
     # ---- risk & exposure (high-stakes signals pulled to the top) ----
     risk = [f for f in findings if f.rule in _RISK_RULES]

@@ -2,6 +2,19 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.41.0] — 2026-09-13
+
+Differential runs (monitoring).
+
+### Added
+- `core.differential`: compares a previous run's graph against the current one and reports what
+  is new, what disappeared (not re-observed), which entities gained confidence, and new
+  relationships. Graphs snapshot to plain JSON (`save_snapshot`/`load_snapshot`), so a run saves
+  one and the next diffs against it — turning Weft into a monitoring tool over a persisted
+  engagement. Pure and deterministic.
+- `build_report` accepts an optional `previous_graph` and renders a "Changes since last run"
+  section when given one.
+
 ## [0.40.0] — 2026-09-13
 
 Standalone interactive graph export.
