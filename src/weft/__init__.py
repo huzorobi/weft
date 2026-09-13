@@ -8,4 +8,4 @@ Every lookup is bound to an authorised engagement, scope-gated, and audit-logged
 See ``weft.compliance`` for the enforcement layer.
 """
 
-__version__ = "0.13.0"
+__version__ = "0.14.0"

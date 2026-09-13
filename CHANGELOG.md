@@ -2,6 +2,17 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.14.0] — 2026-09-13
+
+Native username checker + name-to-handle generation (inspired by Obipixel's socialFIND).
+
+### Added
+- `username_check`: a built-in username checker driven by a JSON site list, using Weft's
+  own async HTTP client and rate limiter — so username enumeration works with no external
+  binary (maigret/sherlock become optional wideners). Given a NAME it generates candidate
+  handles (firstlast, first.last, flast, ...) via `core.username_gen` and checks each;
+  name-derived hits are low-confidence, flagged as candidates for the identity assessment.
+
 ## [0.13.0] — 2026-09-13
 
 Deterministic correlation engine (the evidence layer).

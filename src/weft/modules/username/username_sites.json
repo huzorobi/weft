@@ -1,0 +1,30 @@
+{
+  "_note": "Curated username-check sites (WhatsMyName-style). Detection: exists when HTTP status == e_code and, if set, e_string is present and m_string is absent. Drop in the full WhatsMyName wmn-data.json to widen coverage.",
+  "sites": [
+    {"name": "GitHub", "url": "https://github.com/{}", "e_code": 200, "m_string": "Not Found"},
+    {"name": "GitLab", "url": "https://gitlab.com/{}", "e_code": 200},
+    {"name": "Reddit", "url": "https://www.reddit.com/user/{}", "e_code": 200, "m_string": "Sorry, nobody on Reddit"},
+    {"name": "Twitch", "url": "https://m.twitch.tv/{}", "e_code": 200},
+    {"name": "Keybase", "url": "https://keybase.io/{}", "e_code": 200},
+    {"name": "Medium", "url": "https://medium.com/@{}", "e_code": 200, "m_string": "PAGE NOT FOUND"},
+    {"name": "Dev.to", "url": "https://dev.to/{}", "e_code": 200},
+    {"name": "Hacker News", "url": "https://news.ycombinator.com/user?id={}", "e_code": 200, "m_string": "No such user."},
+    {"name": "Replit", "url": "https://replit.com/@{}", "e_code": 200},
+    {"name": "PyPI", "url": "https://pypi.org/user/{}/", "e_code": 200},
+    {"name": "Docker Hub", "url": "https://hub.docker.com/u/{}", "e_code": 200},
+    {"name": "SoundCloud", "url": "https://soundcloud.com/{}", "e_code": 200},
+    {"name": "Vimeo", "url": "https://vimeo.com/{}", "e_code": 200, "m_string": "Page not found"},
+    {"name": "Patreon", "url": "https://www.patreon.com/{}", "e_code": 200},
+    {"name": "Steam", "url": "https://steamcommunity.com/id/{}", "e_code": 200, "m_string": "The specified profile could not be found"},
+    {"name": "Pinterest", "url": "https://www.pinterest.com/{}/", "e_code": 200},
+    {"name": "Telegram", "url": "https://t.me/{}", "e_code": 200, "m_string": "tgme_page_additional"},
+    {"name": "Wordpress", "url": "https://{}.wordpress.com/", "e_code": 200},
+    {"name": "Gravatar", "url": "https://gravatar.com/{}", "e_code": 200},
+    {"name": "About.me", "url": "https://about.me/{}", "e_code": 200},
+    {"name": "Kaggle", "url": "https://www.kaggle.com/{}", "e_code": 200},
+    {"name": "Chess.com", "url": "https://www.chess.com/member/{}", "e_code": 200},
+    {"name": "Last.fm", "url": "https://www.last.fm/user/{}", "e_code": 200},
+    {"name": "HackerOne", "url": "https://hackerone.com/{}", "e_code": 200},
+    {"name": "Bitbucket", "url": "https://bitbucket.org/{}/", "e_code": 200}
+  ]
+}
