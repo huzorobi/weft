@@ -2,6 +2,17 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.38.0] — 2026-09-13
+
+Risk & exposure section in the report.
+
+### Added
+- The report gains a `Risk & exposure` section, placed just after the summary, that pulls the
+  high-stakes findings — sanctions matches, known-exploited CVEs, and malicious-infrastructure
+  indicators — to the top so they are not missed in the general correlations list. The section
+  is omitted entirely when there are none, so a clean run never implies "checked and clear".
+  Each item stays labelled a lead to confirm, not a determination.
+
 ## [0.37.0] — 2026-09-13
 
 Cryptographic identity resolution.

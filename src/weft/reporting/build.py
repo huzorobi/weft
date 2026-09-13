@@ -20,6 +20,13 @@ from weft.reporting.platforms import classify_platform
 _EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 _URL_RE = re.compile(r"https?://[^\s)\]]+")
 
+# Findings that are high-stakes enough to surface above the general correlations list.
+_RISK_RULES = {
+    "sanctions_match": "Sanctions",
+    "known_exploited_cve": "Known-exploited vulnerability",
+    "malicious_infrastructure": "Malicious infrastructure",
+}
+
 _SYSTEM = (
     "You are an OSINT analyst writing a concise, factual reconnaissance summary for an "
     "authorised engagement. Use ONLY the facts provided. Never invent names, accounts, "
@@ -86,6 +93,18 @@ def build_report(engagement, graph: InMemoryGraph, *, reasoner: Reasoner | None 
     if counts:
         a(f"- Breakdown: {counts}.")
     a("")
+
+    # ---- risk & exposure (high-stakes signals pulled to the top) ----
+    risk = [f for f in findings if f.rule in _RISK_RULES]
+    if risk:
+        a("## Risk & exposure")
+        a("")
+        a("High-stakes signals surfaced during collection, pulled out so they are not missed. "
+          "Each is a lead to confirm, not a determination.")
+        a("")
+        for f in risk:
+            a(f"- **[{_RISK_RULES[f.rule]}]** {f.title} — {f.detail} _(confidence {f.confidence:.2f})_")
+        a("")
 
     # ---- deterministic correlations (the evidence layer) ----
     a("## Findings (correlations)")

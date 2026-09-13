@@ -108,3 +108,27 @@ def test_identity_assessment_fallback_without_model():
     md = build_report(_eng(), _graph(), reasoner=NullReasoner())
     assert "## Identity assessment" in md
     assert "No local model available for an identity assessment" in md
+
+
+def test_risk_and_exposure_section_surfaces_high_stakes_signals():
+    from weft.reporting.build import build_report, NullReasoner
+    g = InMemoryGraph()
+    g.upsert_entity(Entity.make(EntityType.CVE, "CVE-2021-44228", source_module="cve_context",
+                                confidence=0.9, seed_id="s",
+                                metadata={"known_exploited": True, "kev_name": "Log4Shell",
+                                          "ransomware_use": "Known"}))
+    g.upsert_entity(Entity.make(EntityType.ORGANISATION, "BANCO NACIONAL DE CUBA",
+                                source_module="sanctions_screen", confidence=0.5, seed_id="s",
+                                metadata={"sanctioned": True, "list": "OFAC SDN", "programme": "CUBA"}))
+    md = build_report(_eng(), g, reasoner=NullReasoner(), seeds=["x"])
+    assert "## Risk & exposure" in md
+    assert "Known-exploited vulnerability" in md and "Log4Shell" in md
+    assert "Sanctions" in md and "OFAC SDN" in md
+    # risk section appears before the general findings list
+    assert md.index("## Risk & exposure") < md.index("## Findings (correlations)")
+
+
+def test_no_risk_section_when_no_high_stakes_signals():
+    from weft.reporting.build import build_report, NullReasoner
+    md = build_report(_eng(), _graph(), reasoner=NullReasoner(), seeds=["x"])
+    assert "## Risk & exposure" not in md   # omitted when clean, to avoid implying "checked and clear"
