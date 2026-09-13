@@ -63,3 +63,9 @@ pytest
 cp .env.example .env      # fill in the free keys you have
 docker compose up -d      # app + neo4j + postgres + searxng
 ```
+
+## License
+
+Proprietary. Copyright © 2026 HuzoSecurity Ltd. All rights reserved. The source is public
+for reference only; use requires the Owner's written permission. See [LICENSE](LICENSE) and
+[DISCLAIMER.md](DISCLAIMER.md).

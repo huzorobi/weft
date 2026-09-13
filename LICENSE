@@ -1,0 +1,49 @@
+Weft — Proprietary Software License
+Copyright (c) 2026 HuzoSecurity Ltd. All rights reserved.
+
+This software and its source code ("the Software") are the proprietary and
+confidential property of HuzoSecurity Ltd ("the Owner"). The Software is made
+publicly viewable for reference, evaluation, and transparency only. Publication
+does not place the Software in the public domain and does not grant any licence
+to use it beyond what is expressly stated below.
+
+1. Grant
+   No rights are granted except the right to view the source code on the hosting
+   platform where the Owner has published it. All other rights are reserved.
+
+2. Restrictions
+   Without the prior written permission of the Owner, you may not:
+   (a) use, run, or execute the Software, in whole or in part, for any purpose;
+   (b) copy, reproduce, or store the Software except as strictly necessary to
+       view it on the hosting platform;
+   (c) modify, adapt, translate, or create derivative works from the Software;
+   (d) distribute, sublicense, sell, rent, lease, or otherwise transfer the
+       Software or any part of it;
+   (e) reverse engineer, decompile, or disassemble any compiled component,
+       except to the extent this restriction is prohibited by applicable law;
+   (f) remove or alter any copyright, licence, or proprietary notice.
+
+3. Authorised use
+   Any use permitted in writing by the Owner is further conditioned on the
+   authorised-use, data-protection, and lawful-basis terms set out in
+   DISCLAIMER.md, which forms part of this licence.
+
+4. No warranty
+   The Software is provided "AS IS", without warranty of any kind, express or
+   implied, including without limitation the warranties of merchantability,
+   fitness for a particular purpose, and non-infringement.
+
+5. Limitation of liability
+   To the maximum extent permitted by applicable law, the Owner shall not be
+   liable for any claim, damages, or other liability arising from or in
+   connection with the Software or its use. Nothing in this licence excludes or
+   limits liability where it cannot lawfully be excluded or limited.
+
+6. Termination
+   Any permission granted by the Owner terminates automatically on any breach of
+   this licence, at which point you must cease all use and destroy all copies.
+
+7. Governing law
+   This licence is governed by the laws of England and Wales.
+
+For licensing enquiries, contact HuzoSecurity Ltd.
