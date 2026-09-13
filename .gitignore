@@ -1,0 +1,28 @@
+# Secrets and local data — never commit.
+.env
+*.db
+*.sqlite
+*.sqlite3
+weft-dev.db
+
+# Engagement data (personal data — stays local, tied to its engagement).
+/data/
+/exports/
+/loot/
+
+# Python.
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+
+# Editor / OS.
+.vscode/
+.idea/
+.DS_Store
