@@ -7,6 +7,11 @@ entities and drawing the relationships as a graph. One query instead of twenty t
 
 Owner: HuzoSecurity Ltd. Purpose: authorised penetration-testing reconnaissance.
 
+> **Authorised use only.** Weft aggregates information about identifiable people from open
+> sources. Use it only where you hold explicit authorisation and a lawful basis. It is
+> provided "AS IS", without warranty, and the authors accept no liability for misuse. See
+> [DISCLAIMER.md](DISCLAIMER.md) for the full terms.
+
 ## Principles
 
 - **Free sources only.** No paid APIs, ever. Free-tier keys that cost nothing are fine.
