@@ -2,6 +2,21 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.28.0] — 2026-09-13
+
+Threat-intel bundles.
+
+### Added
+- `dns_reputation` (DOMAIN): resolves a domain at a neutral resolver (Google) and at public
+  malware-filtering resolvers (Cloudflare Family, AdGuard) over DNS-over-HTTPS; when the
+  neutral resolver returns a real address but a filter sinkholes or NXDOMAINs it, the domain
+  is flagged with the providers that blocked it. Passive (queries public resolvers, never the
+  domain); keyless. A flag is a lead, not proof — filters over-block.
+- `ip_blocklists` (IP): checks an IP against several keyless, commercial-clean threat
+  blocklists (IPsum level 3, blocklist.de, CINS Army, GreenSnow, Spamhaus DROP) and reports
+  which list it, scaling confidence with the number of hits. Bulk lists are downloaded and
+  cached once per run; CIDR lists (DROP) are matched by network membership. Passive.
+
 ## [0.27.0] — 2026-09-13
 
 Infrastructure-pivot pack.
