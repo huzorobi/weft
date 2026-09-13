@@ -78,3 +78,17 @@ class DownModule(Module):
 
     async def run(self, entity, ctx):
         raise AssertionError("run() must not be called when health is down")
+
+
+class HealthRaisesModule(Module):
+    """A module whose health() raises — the run must skip it, never crash."""
+    name = "health_raises"
+    accepts = [EntityType.DOMAIN]
+    produces = []
+    access = Access.OFFLINE
+
+    async def health(self, ctx=None):
+        raise RuntimeError("health blew up (e.g. an unreachable local service)")
+
+    async def run(self, entity, ctx):
+        raise AssertionError("run() must not be called when health raised")

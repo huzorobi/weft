@@ -30,7 +30,15 @@ class HttpxClient:
     async def get_json(self, url, *, params=None, headers=None, auth=None):
         last_status = 0
         for attempt in range(self._retries + 1):
-            resp = await self._client.get(url, params=params, headers=headers, auth=auth)
+            try:
+                resp = await self._client.get(url, params=params, headers=headers, auth=auth)
+            except httpx.HTTPError:
+                # unreachable host / DNS failure / timeout — treat as a non-result, never raise,
+                # so a module's health() or run() self-disables cleanly instead of crashing the run.
+                if attempt < self._retries:
+                    await asyncio.sleep(1.0 + attempt)
+                    continue
+                return 0, None
             last_status = resp.status_code
             if resp.status_code == 200:
                 try:
@@ -47,7 +55,10 @@ class HttpxClient:
         return last_status, None
 
     async def get_text(self, url, *, params=None, headers=None):
-        resp = await self._client.get(url, params=params, headers=headers)
+        try:
+            resp = await self._client.get(url, params=params, headers=headers)
+        except httpx.HTTPError:
+            return 0, ""
         return resp.status_code, resp.text
 
     async def post_json(self, url, *, json=None, data=None, headers=None):
@@ -59,7 +70,13 @@ class HttpxClient:
         """
         last_status = 0
         for attempt in range(self._retries + 1):
-            resp = await self._client.post(url, json=json, data=data, headers=headers)
+            try:
+                resp = await self._client.post(url, json=json, data=data, headers=headers)
+            except httpx.HTTPError:
+                if attempt < self._retries:
+                    await asyncio.sleep(1.0 + attempt)
+                    continue
+                return 0, None
             last_status = resp.status_code
             if resp.status_code == 200:
                 try:

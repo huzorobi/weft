@@ -139,3 +139,14 @@ def test_run_start_logs_tos_optin():
     starts = [e for e in store.all() if e.action == "run_start"]
     assert starts and starts[0].detail["allow_tos_risk"] is True
     assert "domain:example.com" in starts[0].detail["seeds"]
+
+
+def test_health_check_that_raises_is_skipped_not_fatal():
+    from _fakes import HealthRaisesModule
+    good = StaticModule("good", [EntityType.DOMAIN], [_child("a.example.com")])
+    orch, _ = _orchestrator([HealthRaisesModule(), good])
+    res = _run(orch, [_seed()], engagement=_eng(), acceptance=_accept())
+    # the raising module is skipped with a reason; the run still completes and the good module runs
+    assert "health_raises" in res.modules_skipped
+    assert "raised" in res.modules_skipped["health_raises"]
+    assert "domain:a.example.com" in res.entities

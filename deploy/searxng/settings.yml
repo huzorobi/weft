@@ -1,0 +1,10 @@
+# Minimal SearXNG config for Weft's search_footprint module (JSON API enabled).
+use_default_settings: true
+server:
+  secret_key: "weft-local-dev-change-me"
+  limiter: false
+  image_proxy: false
+search:
+  formats:
+    - html
+    - json

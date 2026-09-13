@@ -2,6 +2,28 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.44.0] — 2026-09-13
+
+One-click cold start + run robustness.
+
+### Added
+- `weft.sh` now cold-starts the whole stack on one click: it brings up the self-hosted
+  services (Neo4j, SearXNG, Tor) as Docker containers — recreating any with a stale port
+  mapping, a named volume preserving Neo4j data — waits for Neo4j, then starts the UI.
+  `--stop` stops the UI and the stack. No docker-compose required (plain `docker run`).
+- `deploy/searxng/settings.yml`: minimal SearXNG config enabling the JSON API the
+  `search_footprint` module needs.
+- Tor service + deterministic container names in `docker-compose.yml` (for compose users).
+
+### Fixed
+- The HTTP client (`get_json`/`get_text`/`post_json`) now catches transport errors
+  (unreachable host, DNS failure, timeout) and returns a non-result instead of raising, so a
+  module whose `health()` or `run()` touches a down service self-disables cleanly.
+- The orchestrator guards the per-module health check: a `health()` that raises skips that
+  module with a reason instead of crashing the whole run. Every registered module is wired
+  through `registry.instances()`; a wiring audit confirmed 58/58 reachable, none dead — modules
+  that cannot run report why (missing key, missing binary, or an unreachable local service).
+
 ## [0.43.0] — 2026-09-13
 
 Priority alerts + Admiralty grading.

@@ -26,7 +26,7 @@ from weft.compliance.audit import AuditLogger
 from weft.compliance.engagement import Engagement, GateOutcome, LegalAcceptance, ScopeGate, ScopeOverride
 from weft.core.entity import Entity
 from weft.core.graphstore import GraphStore
-from weft.core.module import Module, RunContext
+from weft.core.module import HealthStatus, Module, RunContext
 
 
 @dataclass
@@ -112,7 +112,10 @@ class Orchestrator:
         live: list[Module] = []
         for module in self._modules:
             ctx = self._ctx(engagement, operator, allow_tos_risk, 0, allow_dark_web)
-            health = await module.health(ctx)
+            try:
+                health = await module.health(ctx)
+            except Exception as exc:  # a module that cannot even health-check is skipped, never crashes the run
+                health = HealthStatus.down(f"health check raised: {type(exc).__name__}: {exc}")
             if health.ok:
                 live.append(module)
             else:

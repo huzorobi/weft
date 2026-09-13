@@ -1,7 +1,9 @@
-# Weft local stack: app + Neo4j + Postgres + SearXNG. All free, all self-hosted.
+# Weft local stack: app + Neo4j + Postgres + SearXNG + Tor. All free, all self-hosted.
+# One-click cold start: `./weft.sh` brings this up and then the UI.
 services:
   app:
     build: .
+    container_name: weft-app
     env_file: .env
     depends_on:
       - neo4j
@@ -12,9 +14,11 @@ services:
     volumes:
       - ./:/app
     command: uvicorn weft.api.main:app --host 0.0.0.0 --port 8000
+    restart: unless-stopped
 
   neo4j:
     image: neo4j:5-community
+    container_name: weft-neo4j
     environment:
       NEO4J_AUTH: neo4j/change_me
       NEO4J_PLUGINS: '["apoc"]'
@@ -23,9 +27,16 @@ services:
       - "7687:7687"   # bolt
     volumes:
       - neo4j_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:7474 >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
 
   postgres:
     image: postgres:16
+    container_name: weft-postgres
     environment:
       POSTGRES_USER: weft
       POSTGRES_PASSWORD: weft
@@ -34,15 +45,26 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
 
   searxng:
     image: searxng/searxng:latest
+    container_name: weft-searxng
     environment:
       SEARXNG_BASE_URL: http://localhost:8080/
     ports:
       - "8080:8080"
     volumes:
       - ./deploy/searxng:/etc/searxng
+    restart: unless-stopped
+
+  # Tor SOCKS proxy for the (opt-in) dark-web module — reachable at socks5://127.0.0.1:9050.
+  tor:
+    image: osminogin/tor-simple
+    container_name: weft-tor
+    ports:
+      - "9050:9050"
+    restart: unless-stopped
 
 volumes:
   neo4j_data:
