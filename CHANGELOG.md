@@ -2,6 +2,24 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.24.0] — 2026-09-13
+
+Four keyless, verified OSINT sources.
+
+### Added
+- `ripestat` (IP): RIPE NCC open data — network abuse contact (EMAIL) and announcing
+  ASN (ORGANISATION) for an IP. Authoritative, open, commercial use permitted, no key.
+- `shodan_internetdb` (IP): Shodan's pre-scanned host view — open ports, CPEs, known CVEs,
+  tags, and reverse-DNS hostnames (DOMAIN). Passive (reads Shodan's index, never touches
+  the target); distinct from the paid Shodan API. Keyless.
+- `keybase` (USERNAME): cryptographically verified social proofs — the Twitter/GitHub/etc.
+  accounts a person proved they control — as high-confidence identity pivots. Keyless.
+- `sec_edgar` (NAME/ORGANISATION): US corporate filings via SEC EDGAR full-text search,
+  returning filer companies and their CIK. Complements the UK-only Companies House and the
+  global GLEIF. Keyless (SEC requires a descriptive User-Agent, which the HTTP client sets).
+
+All four were live-verified against the real services before shipping.
+
 ## [0.23.0] — 2026-09-13
 
 Address geocoding and addresses on the map.
