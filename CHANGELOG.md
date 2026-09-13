@@ -2,6 +2,24 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.31.0] — 2026-09-13
+
+Surface + footprint pack.
+
+### Added
+- `subdomain_center` (DOMAIN): subdomains from subdomain.center's index, widening coverage
+  beyond CT logs and HackerTarget. Keyless, passive.
+- `crossref` (NAME / PERSON / ORGANISATION): scholarly publications associated with a query
+  from Crossref — DOI links with title, publisher, and year. Query matches carry modest
+  confidence (a shared name is not proof of authorship). Keyless, passive.
+- `apple_itunes` (ORGANISATION / NAME): apps published by an organisation via the App Store
+  search API, filtered to results whose seller matches the query, yielding App Store links,
+  the publisher as an organisation, and bundle IDs. Keyless, passive.
+
+### Deferred (not shipped unverified)
+- psbdmp (paste dumps) — host no longer resolves; anubis/jldc.me and openbugbounty — bot-gated
+  (HTTP 403). Left rather than shipped against dead or gated endpoints.
+
 ## [0.30.0] — 2026-09-13
 
 PGP identity + CVE context.
