@@ -2,6 +2,14 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.47.0] — 2026-09-13
+
+Clearer shutdown message.
+
+### Changed
+- The in-UI shutdown now tells the operator that the browser's "connection error" afterwards is
+  expected — it means the UI has stopped — so a successful shutdown does not look like a failure.
+
 ## [0.46.0] — 2026-09-13
 
 In-UI shutdown button.

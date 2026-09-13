@@ -51,7 +51,9 @@ def main() -> None:
             if st.button("Shut down now", type="primary", use_container_width=True):
                 from weft.ui.shutdown import request_shutdown
                 request_shutdown()
-                st.warning("Shutting Weft down — the stack and UI are stopping. You can close this tab.")
+                st.success("✅ Weft is shutting down — stopping the stack and the UI.")
+                st.info("This tab will show a **connection error** in a moment. That is expected: "
+                        "it means the UI has stopped. Just close the tab.")
                 st.stop()
         st.divider()
 
