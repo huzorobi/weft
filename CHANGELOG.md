@@ -2,6 +2,22 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.36.0] — 2026-09-13
+
+Risk & identity correlation rules — the enrichment sources now surface as findings.
+
+### Added
+Four deterministic correlation rules so this session's enrichment signals become ranked
+findings in the report and evidence for the reasoner, instead of sitting unused in metadata:
+- `sanctions_match`: an entity flagged by `sanctions_screen` (OFAC/UN) becomes a finding with
+  its list and programme.
+- `known_exploited_cve`: a CVE marked known-exploited by `cve_context` (CISA KEV) becomes a
+  high-confidence finding, noting ransomware use.
+- `malicious_infrastructure`: an IP/domain flagged by `ip_blocklists`, `abusech`, or
+  `dns_reputation` becomes a finding naming what flagged it.
+- `shared_pgp_key`: emails/names linked by a shared PGP key (`pgp_keyservers`) become an
+  identity-link finding.
+
 ## [0.35.0] — 2026-09-13
 
 Package maintainer identity + Stack Overflow.

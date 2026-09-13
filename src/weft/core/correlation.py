@@ -52,7 +52,8 @@ class CorrelationEngine:
     def run(self, graph: InMemoryGraph) -> list[Finding]:
         findings: list[Finding] = []
         for rule in (_multi_platform, _corroborated_names, _person_orgs, _email_accounts,
-                     _shared_registrant, _geo_cluster, _hub_nodes, _multi_source_anchor):
+                     _shared_registrant, _geo_cluster, _hub_nodes, _multi_source_anchor,
+                     _sanctions_hits, _exploited_cves, _malicious_infra, _shared_key_identity):
             try:
                 findings.extend(rule(graph))
             except Exception:  # a bad rule never breaks the pass
@@ -205,4 +206,79 @@ def _multi_source_anchor(graph: InMemoryGraph) -> list[Finding]:
                 detail=f"Confirmed by {len(srcs)} independent sources: {', '.join(srcs)}.",
                 confidence=min(1.0, 0.7 + 0.1 * (len(srcs) - 2)),
                 entity_keys=(e.key(),), sources=srcs))
+    return out
+
+
+# --- risk & identity rules (surface the enrichment signals) -----------------
+
+def _meta(e: Entity) -> dict:
+    return e.metadata if isinstance(e.metadata, dict) else {}
+
+
+def _sanctions_hits(graph: InMemoryGraph) -> list[Finding]:
+    out = []
+    for e in graph.nodes.values():
+        md = _meta(e)
+        if md.get("sanctioned"):
+            lst, prog = md.get("list"), md.get("programme")
+            out.append(Finding(
+                rule="sanctions_match",
+                title=f"Sanctions match: {e.value[:50]}",
+                detail=(f"Potential match on {lst or 'a sanctions list'}"
+                        + (f" (programme {prog})" if prog else "") + " — confirm identity before acting."),
+                confidence=e.confidence,
+                entity_keys=(e.key(),), sources=_sources_of([e])))
+    return out
+
+
+def _exploited_cves(graph: InMemoryGraph) -> list[Finding]:
+    out = []
+    for e in graph.nodes.values():
+        md = _meta(e)
+        if e.type is EntityType.CVE and md.get("known_exploited"):
+            ransomware = str(md.get("ransomware_use", "")).lower() == "known"
+            out.append(Finding(
+                rule="known_exploited_cve",
+                title=f"Known-exploited vulnerability: {e.value}",
+                detail=((md.get("kev_name") or "Listed in CISA KEV — actively exploited in the wild.")
+                        + (" Known ransomware use." if ransomware else "")),
+                confidence=max(e.confidence, 0.9),
+                entity_keys=(e.key(),), sources=_sources_of([e])))
+    return out
+
+
+def _malicious_infra(graph: InMemoryGraph) -> list[Finding]:
+    labels = {"malware_ioc": "a malware/C2 indicator (abuse.ch)",
+              "listed": "threat blocklists",
+              "flagged": "malware-filtering DNS"}
+    out = []
+    for e in graph.nodes.values():
+        md = _meta(e)
+        rep = md.get("reputation")
+        if rep in labels:
+            extra = (md.get("malware")
+                     or (f"{md.get('list_count')} lists" if md.get("list_count") else "")
+                     or (", ".join(md.get("blocked_by", [])) if md.get("blocked_by") else ""))
+            out.append(Finding(
+                rule="malicious_infrastructure",
+                title=f"Malicious infrastructure: {e.type.value} {e.value[:40]}",
+                detail=f"Flagged by {labels[rep]}" + (f": {extra}" if extra else "") + ".",
+                confidence=e.confidence,
+                entity_keys=(e.key(),), sources=_sources_of([e])))
+    return out
+
+
+def _shared_key_identity(graph: InMemoryGraph) -> list[Finding]:
+    out = []
+    for e in graph.nodes.values():
+        md = _meta(e)
+        if "PGP key" in str(md.get("linked_via", "")):
+            other = md.get("with_email") or md.get("for_email")
+            out.append(Finding(
+                rule="shared_pgp_key",
+                title=f"Identity link via shared PGP key: {e.value[:50]}",
+                detail=(f"{e.value} shares a PGP key with {other} — a strong identity link."
+                        if other else f"{e.value} is bound to a subject's PGP key."),
+                confidence=max(e.confidence, 0.8),
+                entity_keys=(e.key(),), sources=_sources_of([e])))
     return out
