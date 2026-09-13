@@ -125,12 +125,12 @@ def main() -> None:
     # --- the search form is always visible ---
     st.subheader("New search")
     c1, c2, c3 = st.columns([1, 1, 2])
-    client = c1.text_input("Case label (optional)", value="",
+    client = c1.text_input("Case label (optional)", key="in_client",
                            placeholder="e.g. my-investigation",
                            help="Just a name to find this search later in the audit log and saved runs. "
                                 "Leave blank and it is named after the seed.")
-    seed_type = c2.selectbox("Seed type", SEED_TYPES, format_func=lambda t: t.value)
-    seed_value = c3.text_input("Seed value", placeholder=SEED_HINT.get(seed_type, ""),
+    seed_type = c2.selectbox("Seed type", SEED_TYPES, format_func=lambda t: t.value, key="in_seed_type")
+    seed_value = c3.text_input("Seed value", key="in_seed", placeholder=SEED_HINT.get(seed_type, ""),
                                help="What to investigate: a domain, email, username, name, phone, "
                                     "crypto address, or CVE.")
 
@@ -142,7 +142,15 @@ def main() -> None:
                        help="The local model picks high-value pivots from a validated action menu.")
     dark_web = o4.checkbox("🌐 Dark-web", value=False,
                            help="Passive Ahmia index search over Tor (opt-in, logged). Search-only.")
-    run = st.button("Run search", type="primary", disabled=not seed_value.strip(), use_container_width=True)
+    b_run, b_clear = st.columns([3, 1])
+    run = b_run.button("Run search", type="primary", disabled=not seed_value.strip(), use_container_width=True)
+    if b_clear.button("🧹 New search", use_container_width=True,
+                      help="Clear the boxes and the previous results to start a fresh search — "
+                           "no need to restart Weft."):
+        for k in ("in_client", "in_seed", "graph", "message", "engagement", "seed_value",
+                  "report_md", "report_html", "report_pdf"):
+            st.session_state.pop(k, None)
+        st.rerun()
 
     if run:
         eng = _auto_engagement(client, seed_type, seed_value)

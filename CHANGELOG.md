@@ -2,6 +2,15 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.55.0] — 2026-09-13
+
+New-search / clear button.
+
+### Added
+- A **🧹 New search** button next to Run clears the input boxes (case label, seed) and the
+  previous run's graph, report, and downloads, so the operator can investigate a different
+  target immediately without restarting Weft.
+
 ## [0.54.0] — 2026-09-13
 
 Download the report as PDF / HTML.
