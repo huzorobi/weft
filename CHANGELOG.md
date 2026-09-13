@@ -2,6 +2,17 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.45.0] — 2026-09-13
+
+Launcher also starts the local AI.
+
+### Added
+- `weft.sh` now ensures Ollama (the local AI behind the report narrative and identity
+  assessment) is running: it starts `ollama serve` if Ollama is installed but not already
+  serving, pulls the default model (llama3.2:3b) on first run, and leaves an already-running
+  instance untouched. Best-effort — Weft still runs if Ollama is absent (the AI sections fall
+  back). So one click now cold-starts the services, the local AI, and the UI together.
+
 ## [0.44.0] — 2026-09-13
 
 One-click cold start + run robustness.

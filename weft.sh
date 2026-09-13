@@ -51,6 +51,24 @@ stop_stack() {
   echo "stack stopped"
 }
 
+# Local AI (Ollama) powers the report narrative + identity assessment. Start it if it is
+# installed but not already serving; leave a running instance (it may be a system service)
+# untouched. Best-effort — Weft works without it (the AI sections just fall back).
+OLLAMA_MODEL="${WEFT_OLLAMA_MODEL:-llama3.2:3b}"
+ensure_ollama() {
+  command -v ollama >/dev/null 2>&1 || { echo "  (Ollama not installed — AI narrative disabled; recon still runs)"; return; }
+  if ! port_open 11434; then
+    echo "→ starting Ollama…"
+    setsid ollama serve >"$HOME/.weft-ollama.log" 2>&1 </dev/null &
+    for _ in $(seq 1 30); do port_open 11434 && break; sleep 1; done
+  fi
+  if port_open 11434 && ! ollama list 2>/dev/null | grep -q "${OLLAMA_MODEL%%:*}"; then
+    echo "→ pulling AI model ${OLLAMA_MODEL} (first run only)…"
+    ollama pull "$OLLAMA_MODEL" >/dev/null 2>&1 &
+  fi
+  port_open 11434 && echo "→ Ollama ready (model ${OLLAMA_MODEL})" || echo "  (Ollama did not start; AI sections will fall back)"
+}
+
 if [ "${1:-}" = "--stop" ]; then
   pids=$(ss -ltnp 2>/dev/null | awk -v p=":${PORT} " '$0 ~ p' | grep -o "pid=[0-9]*" | cut -d= -f2 | sort -u)
   [ -n "$pids" ] && kill $pids 2>/dev/null && echo "stopped UI ($pids)" || echo "UI not running on ${PORT}"
@@ -66,12 +84,13 @@ if [ ! -x .venv/bin/streamlit ]; then
   ./.venv/bin/pip install --quiet -e . || ./.venv/bin/pip install --quiet -r requirements.txt
 fi
 
-# ---- bring up the self-hosted stack ----
+# ---- bring up the self-hosted stack + local AI ----
 if have_docker; then
   start_stack
 else
   echo "⚠ Docker not available — starting the UI only. Install Docker for Neo4j/SearXNG/Tor-backed modules."
 fi
+ensure_ollama
 
 # ---- start the UI ----
 if ! port_open "${PORT}"; then
