@@ -49,10 +49,12 @@ def build_report(engagement, graph: InMemoryGraph, *, reasoner: Reasoner | None 
     for e in nodes:
         by_type.setdefault(e.type.value, []).append(e)
 
+    from weft.core.analytics import graph_analytics
     from weft.core.correlation import CorrelationEngine
     from weft.core.resolution import resolve_identities
     findings = CorrelationEngine().run(graph)
     resolution = resolve_identities(graph)
+    analytics = graph_analytics(graph)
 
     lines: list[str] = []
     a = lines.append
@@ -126,6 +128,21 @@ def build_report(engagement, graph: InMemoryGraph, *, reasoner: Reasoner | None 
         a("Possible matches (weaker leads, verify):")
         for aa, bb, score, why in resolution.possibly_same[:10]:
             a(f"- {why} _(similarity {score})_")
+    a("")
+
+    # ---- graph analytics: key pivots + communities ----
+    a("## Graph analytics")
+    a("")
+    if analytics.pivots:
+        a("Highest-betweenness entities — the gatekeepers that bridge the graph and are the best "
+          "pivots to pursue:")
+        a("")
+        for key, score in analytics.pivots:
+            node = graph.nodes.get(key)
+            label = f"{node.type.value} `{node.value}`" if node else key
+            a(f"- {label} — betweenness {score}")
+        a("")
+    a(f"- {len(analytics.communities)} community/communities (connected clusters) in the graph.")
     a("")
 
     # ---- AI identity assessment (grounded, optional) ----

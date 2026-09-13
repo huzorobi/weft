@@ -2,6 +2,16 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.16.0] — 2026-09-13
+
+Graph analytics — key pivots and communities.
+
+### Added
+- `core.analytics`: betweenness centrality (Brandes) ranks the gatekeeper entities that
+  bridge the graph — the best pivots — and connected-component community detection groups
+  the graph into its natural clusters. Pure Python over the in-memory graph, no Neo4j GDS
+  plugin required. The report gains a "Graph analytics" section listing the top pivots.
+
 ## [0.15.0] — 2026-09-13
 
 Entity resolution — identity clustering.
