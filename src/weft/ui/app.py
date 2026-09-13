@@ -44,6 +44,18 @@ def main() -> None:
     st.title("Weft")
     st.caption("Free-source OSINT reconnaissance. Authorised engagements only.")
 
+    # --- sidebar: live service status ---
+    with st.sidebar:
+        from weft.ui.health import all_live, service_status
+        status = service_status()
+        header = "🟢 All services live" if all_live(status) else "🟠 Some services down"
+        st.markdown(f"**{header}**")
+        cols = st.columns(len(status))
+        for col, (svc, ok) in zip(cols, status.items()):
+            col.markdown(f"{'🟢' if ok else '🔴'} {svc}")
+        st.caption("Green = reachable. Refresh the page to re-check.")
+        st.divider()
+
     # --- sidebar: shutdown control ---
     with st.sidebar:
         with st.expander("⏻  Shut down Weft"):

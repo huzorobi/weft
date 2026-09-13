@@ -2,6 +2,17 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.48.0] — 2026-09-13
+
+Live status dots + app-window launch.
+
+### Added
+- The UI sidebar shows a live service-status panel: a green dot per service (Neo4j, SearXNG,
+  Tor, Ollama) when reachable, red when not, and an "All services live" header. `weft.ui.health`
+  holds the socket checks.
+- `weft.sh` now opens Weft in a Chromium **app window** — a frameless standalone window that
+  looks like a desktop app, matching the NullCadre launcher — with a normal-browser fallback.
+
 ## [0.47.0] — 2026-09-13
 
 Clearer shutdown message.

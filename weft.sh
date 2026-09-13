@@ -104,8 +104,23 @@ else
   echo "→ weft UI already running on ${URL}"
 fi
 
-# open the browser (best-effort across desktops)
-( xdg-open "$URL" || sensible-browser "$URL" || firefox "$URL" || chromium "$URL" ) >/dev/null 2>&1 &
+# open in a Chromium app window — a frameless standalone window, so Weft feels like a desktop
+# app rather than a browser tab (falls back to a normal browser if no Chromium is present).
+open_app_window() {
+  local url="$1" br=""
+  for b in chromium chromium-browser google-chrome google-chrome-stable brave-browser; do
+    command -v "$b" >/dev/null 2>&1 && { br="$b"; break; }
+  done
+  if [ -n "$br" ]; then
+    mkdir -p "$HOME/.weft/browser-profile"
+    setsid "$br" --app="$url" --user-data-dir="$HOME/.weft/browser-profile" \
+      --class=Weft --name=Weft --no-first-run --no-default-browser-check \
+      --window-size=1500,950 >/dev/null 2>&1 </dev/null &
+  else
+    ( xdg-open "$url" || sensible-browser "$url" || firefox "$url" ) >/dev/null 2>&1 &
+  fi
+}
+open_app_window "$URL"
 echo "→ opened ${URL}   UI log: ${LOG}"
 echo "   Close this window any time; Weft keeps running. Stop everything with:  $(readlink -f "$0") --stop"
 tail -n +1 -f "$LOG" 2>/dev/null || true
