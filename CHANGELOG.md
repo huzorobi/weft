@@ -2,6 +2,22 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.29.0] — 2026-09-13
+
+News, court records, and decentralised social.
+
+### Added
+- `gdelt` (NAME / PERSON / ORGANISATION / DOMAIN): recent worldwide news mentions from the
+  GDELT DOC 2.0 API — article URLs with source, date, country, and language, over a 3-month
+  window. Keyless, passive. (GDELT rate-limits to one request per 5 seconds; the module
+  degrades to no results rather than erroring when throttled.)
+- `courtlistener` (NAME / PERSON / ORGANISATION): US case law from CourtListener (Free Law
+  Project) — the cases a subject appears in, with court and filing date. Public-domain data,
+  keyless; an optional free token (COURTLISTENER_API_TOKEN) raises the rate limit.
+- `bluesky` (USERNAME / NAME / PERSON): Bluesky / AT Protocol public profiles — a handle
+  resolves directly (high confidence); a plain username or name searches for matching accounts
+  (candidates). Public read only, no login, ToS-clean, keyless.
+
 ## [0.28.0] — 2026-09-13
 
 Threat-intel bundles.
