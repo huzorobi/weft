@@ -2,6 +2,21 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.34.0] — 2026-09-13
+
+POST support + package-vulnerability chain + abuse.ch.
+
+### Added
+- HTTP client gains `post_json` (JSON or form body) — several sources are POST-only. The
+  `HttpClient` protocol and the test double are updated to match.
+- New `EntityType.PACKAGE`. The `npm` module now emits a PACKAGE entity (e.g. `npm:lodash`)
+  for each package, alongside its URL.
+- `osv_package` (PACKAGE): known vulnerabilities affecting a package from OSV.dev, emitted as
+  CVE entities plus advisory links — so a developer's packages chain through to their CVEs,
+  which `cve_context` then enriches with CISA KEV. Keyless, passive (POST).
+- `abusech` (IP / DOMAIN): malware/C2 reputation from abuse.ch ThreatFox (IOCs) and URLhaus
+  (malware URLs). Free Auth-Key, self-disables without it; POST-based.
+
 ## [0.33.0] — 2026-09-13
 
 Free-key provider block + the keyed building block.

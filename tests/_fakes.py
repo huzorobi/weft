@@ -28,6 +28,12 @@ class FakeHttp:
         status, data = self._match(url)
         return status, (data if isinstance(data, str) else "")
 
+    async def post_json(self, url, *, json=None, data=None, headers=None):
+        # include the JSON/form body in the match target so different POST queries can differ
+        body = json if json is not None else data
+        target = url + ("#" + repr(sorted(body.items())) if isinstance(body, dict) else "")
+        return self._match(target)
+
 
 class FakeSecrets:
     def __init__(self, mapping: dict[str, str]):

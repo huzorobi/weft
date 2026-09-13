@@ -41,6 +41,7 @@ class EntityType(str, Enum):
     BREACH = "breach"
     CRYPTO_ADDRESS = "crypto_address"
     CVE = "cve"
+    PACKAGE = "package"
 
 
 _WS = re.compile(r"\s+")
@@ -69,6 +70,8 @@ def normalise_value(entity_type: EntityType, raw: str, *, default_region: str = 
         return _WS.sub(" ", value).strip()
     if entity_type == EntityType.CVE:
         return value.upper()
+    if entity_type == EntityType.PACKAGE:
+        return value.strip().lower()  # "ecosystem:name"
     if entity_type == EntityType.CRYPTO_ADDRESS:
         # Ethereum (0x + 40 hex) is case-insensitive (EIP-55 checksum is only a hint) — lowercase
         # so 0xABC…==0xabc… dedupe. Bitcoin base58/bech32 IS case-sensitive — trim only, never fold.

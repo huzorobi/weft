@@ -50,5 +50,27 @@ class HttpxClient:
         resp = await self._client.get(url, params=params, headers=headers)
         return resp.status_code, resp.text
 
+    async def post_json(self, url, *, json=None, data=None, headers=None):
+        """POST a JSON body (``json``) or form body (``data``); return (status, parsed-JSON).
+
+        Some free sources (abuse.ch's ThreatFox/URLhaus) only accept POST. Retries the same
+        transient statuses as ``get_json``. Returns ``None`` payload on a non-200 or non-JSON
+        response so a module can treat it uniformly with the GET path.
+        """
+        last_status = 0
+        for attempt in range(self._retries + 1):
+            resp = await self._client.post(url, json=json, data=data, headers=headers)
+            last_status = resp.status_code
+            if resp.status_code == 200:
+                try:
+                    return resp.status_code, resp.json()
+                except Exception:
+                    return resp.status_code, None
+            if resp.status_code in (429, 502, 503) and attempt < self._retries:
+                await asyncio.sleep(1.5 * (attempt + 1))
+                continue
+            return resp.status_code, None
+        return last_status, None
+
     async def aclose(self):
         await self._client.aclose()

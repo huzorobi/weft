@@ -19,7 +19,7 @@ MAX_PACKAGES = 20
 class Npm(Module):
     name = "npm"
     accepts = [EntityType.USERNAME]
-    produces = [EntityType.URL]
+    produces = [EntityType.URL, EntityType.PACKAGE]
     access = Access.FREE_API
     reliability = 0.75
     timeout_s = 25
@@ -60,6 +60,9 @@ def _parse(data: dict, seed: Entity, source: str, reliability: float) -> list[En
                                        "package": name, "description": pkg.get("description"),
                                        "publisher": publisher or None,
                                    }.items() if v}))
+            out.append(Entity.make(EntityType.PACKAGE, f"npm:{name}", source_module=source,
+                                   confidence=reliability, seed_id=seed.seed_id,
+                                   metadata={"ecosystem": "npm", "name": name}))
         repo = links.get("repository")
         if repo and repo not in seen_repos:
             seen_repos.add(repo)

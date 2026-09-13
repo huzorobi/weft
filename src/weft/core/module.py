@@ -70,6 +70,11 @@ class HttpClient(Protocol):
         self, url: str, *, params: dict | None = None, headers: dict | None = None,
     ) -> tuple[int, str]: ...
 
+    async def post_json(
+        self, url: str, *, json: object | None = None, data: dict | None = None,
+        headers: dict | None = None,
+    ) -> tuple[int, object]: ...
+
 
 @dataclass
 class RunContext:
