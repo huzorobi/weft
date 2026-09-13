@@ -44,6 +44,17 @@ def main() -> None:
     st.title("Weft")
     st.caption("Free-source OSINT reconnaissance. Authorised engagements only.")
 
+    # --- sidebar: shutdown control ---
+    with st.sidebar:
+        with st.expander("⏻  Shut down Weft"):
+            st.caption("Stops the stack (Neo4j, SearXNG, Tor) and this UI. Ollama is left running.")
+            if st.button("Shut down now", type="primary", use_container_width=True):
+                from weft.ui.shutdown import request_shutdown
+                request_shutdown()
+                st.warning("Shutting Weft down — the stack and UI are stopping. You can close this tab.")
+                st.stop()
+        st.divider()
+
     # --- sidebar: engagement selection + creation ---
     with st.sidebar:
         st.header("Engagement")

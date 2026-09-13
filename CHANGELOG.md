@@ -2,6 +2,16 @@
 
 All notable changes to Weft are recorded here. Dates are ISO-8601 (UTC).
 
+## [0.46.0] — 2026-09-13
+
+In-UI shutdown button.
+
+### Added
+- A "⏻ Shut down Weft" control in the UI sidebar that stops the whole run — the stack
+  (Neo4j, SearXNG, Tor) and the UI itself — by handing off to `weft.sh --stop` in a detached
+  process (so the UI can show a goodbye before it is killed). Ollama is left running.
+  `weft.ui.shutdown` holds the pure command-building logic.
+
 ## [0.45.0] — 2026-09-13
 
 Launcher also starts the local AI.
