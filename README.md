@@ -57,6 +57,16 @@ pip install -e ".[dev]"
 pytest
 ```
 
+## Run the UI
+
+```bash
+./weft.sh                 # sets up the venv on first run, starts the Streamlit UI, opens the browser
+./weft.sh --stop          # stop it
+```
+
+On Linux desktops a double-clickable `weft.desktop` launcher (with the woven Weft icon) can point at
+`weft.sh` for one-click start.
+
 ## Run the full stack (later phases)
 
 ```bash
