@@ -2,7 +2,7 @@
 
 <img src="icon-256.png" width="120" alt="Weft" />
 
-<img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=600&size=24&duration=3400&pause=1000&color=A78BFA&center=true&vCenter=true&width=780&lines=One+seed.+Sixty+free+sources.+One+graph.;Passive+only.+It+never+touches+the+target.;The+model+reasons+about+evidence.+It+never+invents+it.;Free+sources+only.+No+paid+APIs%2C+ever." alt="One seed, sixty free sources, one graph" />
+<img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=600&size=22&duration=3400&pause=1000&color=A78BFA&center=true&vCenter=true&width=900&lines=One+seed.+Sixty+free+sources.+One+graph.;Passive+only.+It+never+touches+the+target.;The+model+reasons+about+evidence.+It+never+invents+it.;Free+sources+only.+No+paid+APIs%2C+ever." alt="One seed, sixty free sources, one graph" />
 
 # Weft
 
