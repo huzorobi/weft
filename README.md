@@ -263,9 +263,17 @@ pytest                    # 310 tests, deterministic and offline
 
 ## ⚖️ Licence
 
-Proprietary. Copyright © 2026 HuzoSecurity Ltd. All rights reserved. The source is public for
-reference only; use requires the Owner's written permission. See [LICENSE](LICENSE) and
-[DISCLAIMER.md](DISCLAIMER.md).
+Proprietary. Copyright © 2026 HuzoSecurity Ltd. All rights reserved. The source is published for
+review; running it requires a licence from the Owner.
+
+**Licences are granted on request**, ordinarily for authorised security testing and investigative
+work, academic and research use, or evaluation by prospective clients. Write to
+**robert@huzosecurity.com** saying who you are, what you intend to use it for, and the lawful basis
+for any processing of personal data.
+
+That condition is deliberate. Weft aggregates information about identifiable people from open
+sources, and a tool that does that should not be handed to anyone who cannot account for why they
+want it. See [LICENSE](LICENSE) and [DISCLAIMER.md](DISCLAIMER.md).
 
 <div align="center">
 <sub><b>Owner</b> HuzoSecurity Ltd · <b>Purpose</b> authorised penetration-testing reconnaissance</sub>

@@ -23,27 +23,43 @@ to use it beyond what is expressly stated below.
        except to the extent this restriction is prohibited by applicable law;
    (f) remove or alter any copyright, licence, or proprietary notice.
 
-3. Authorised use
+3. Obtaining a licence
+   The Owner grants use licences on request. A licence is ordinarily available for:
+   (a) authorised security testing and investigative work, where the requester can
+       state the lawful basis on which personal data will be processed;
+   (b) academic and research use;
+   (c) evaluation by prospective clients of HuzoSecurity Ltd.
+
+   Requests should be sent to robert@huzosecurity.com and should state who you are,
+   what you intend to use the Software for, and the lawful basis for any processing of
+   personal data. The Owner may decline a request without stating a reason, and may
+   withdraw a licence at any time.
+
+   This condition exists because the Software aggregates information about identifiable
+   people. The Owner licences it to users who can account for their purpose, and not
+   otherwise.
+
+4. Authorised use
    Any use permitted in writing by the Owner is further conditioned on the
    authorised-use, data-protection, and lawful-basis terms set out in
    DISCLAIMER.md, which forms part of this licence.
 
-4. No warranty
+5. No warranty
    The Software is provided "AS IS", without warranty of any kind, express or
    implied, including without limitation the warranties of merchantability,
    fitness for a particular purpose, and non-infringement.
 
-5. Limitation of liability
+6. Limitation of liability
    To the maximum extent permitted by applicable law, the Owner shall not be
    liable for any claim, damages, or other liability arising from or in
    connection with the Software or its use. Nothing in this licence excludes or
    limits liability where it cannot lawfully be excluded or limited.
 
-6. Termination
+7. Termination
    Any permission granted by the Owner terminates automatically on any breach of
    this licence, at which point you must cease all use and destroy all copies.
 
-7. Governing law
+8. Governing law
    This licence is governed by the laws of England and Wales.
 
-For licensing enquiries, contact HuzoSecurity Ltd.
+For licensing enquiries, contact HuzoSecurity Ltd at robert@huzosecurity.com.
