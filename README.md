@@ -268,7 +268,7 @@ review; running it requires a licence from the Owner.
 
 **Licences are granted on request**, ordinarily for authorised security testing and investigative
 work, academic and research use, or evaluation by prospective clients. Write to
-**robert@huzosecurity.com** saying who you are, what you intend to use it for, and the lawful basis
+**info@huzosecurity.com** saying who you are, what you intend to use it for, and the lawful basis
 for any processing of personal data.
 
 That condition is deliberate. Weft aggregates information about identifiable people from open
